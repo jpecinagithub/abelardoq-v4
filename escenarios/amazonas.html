@@ -64,20 +64,56 @@
     font-size:30px; line-height:34px; text-align:center; color:#ffd970; text-shadow:0 2px 8px rgba(0,0,0,.85);
     transition:transform .12s linear; }
 
-  /* ---------- Panel de resultado (choque / victoria) ---------- */
-  #result-panel { position:fixed; inset:0; z-index:25; display:none; align-items:center; justify-content:center;
-    background: radial-gradient(ellipse at center, rgba(8,30,16,.45) 0%, rgba(4,18,9,.8) 100%); }
-  #result-card { max-width:520px; width:92%; text-align:center; padding:32px 38px 28px;
-    background:rgba(10,32,18,.88); border:1px solid rgba(120,220,150,.35); border-radius:16px;
-    box-shadow:0 18px 60px rgba(0,0,0,.55); }
-  #result-card h1 { margin:0 0 12px; font-size:34px; color:#b9f4c6; text-shadow:0 2px 14px rgba(46,160,80,.45); }
-  #result-stats { margin:0 0 22px; font-size:17px; line-height:1.6; color:#eaf5ec; }
-  #result-stats b { color:#8bf0a4; font-variant-numeric:tabular-nums; }
-  #btn-retry { font-size:18px; font-weight:700; letter-spacing:.5px; color:#06280f; cursor:pointer;
-    background:linear-gradient(180deg,#8bf0a4,#43c465); border:none; border-radius:999px; padding:12px 46px;
-    box-shadow:0 6px 22px rgba(60,200,100,.45); transition:transform .12s ease, box-shadow .12s ease; }
-  #btn-retry:hover { transform:translateY(-2px) scale(1.03); box-shadow:0 10px 28px rgba(60,200,100,.6); }
-  #btn-retry:active { transform:scale(.98); }
+  /* ---------- Botón de música ---------- */
+  #btn-mute { position:absolute; top:56px; right:18px; pointer-events:auto; font-size:16px; cursor:pointer;
+    background:rgba(8,30,16,.55); border:1px solid rgba(120,220,150,.4); color:#dfffe8;
+    width:40px; height:40px; border-radius:999px; line-height:1; }
+  #btn-mute:hover { background:rgba(20,60,32,.75); }
+
+  /* ---------- Pantalla de evaluación final (estilo «Misión cumplida») ---------- */
+  #eval-panel { position:fixed; inset:0; z-index:25; display:none; align-items:center; justify-content:center;
+    background: radial-gradient(ellipse at center, rgba(10,20,30,.5) 0%, rgba(5,10,16,.85) 100%); }
+  #eval-card { max-width:600px; width:94%; max-height:94vh; overflow-y:auto; text-align:center; padding:28px 34px 24px;
+    background:#16222e; border:1px solid #c9a227; border-radius:10px; color:#dfe9f2;
+    box-shadow:0 18px 60px rgba(0,0,0,.6); }
+  #eval-title { margin:0 0 4px; font-size:30px; font-weight:800; letter-spacing:3px; color:#ffc933; text-transform:uppercase; }
+  #eval-stars { font-size:42px; letter-spacing:8px; color:#5a6672; line-height:1.15; }
+  #eval-stars .on { color:#ffc933; text-shadow:0 0 14px rgba(255,201,51,.55); }
+  #eval-score { font-size:33px; font-weight:800; letter-spacing:2px; color:#ffffff; margin:4px 0;
+    font-variant-numeric:tabular-nums; }
+  #eval-stats { margin:0 0 10px; font-size:13px; letter-spacing:1.5px; color:#b8c7d4; text-transform:uppercase; }
+  #eval-status { margin:0 0 4px; font-size:15px; font-weight:700; letter-spacing:2px; color:#ffc933; text-transform:uppercase; }
+  #eval-best { margin:0 0 16px; font-size:13px; letter-spacing:2px; color:#8fa6b8; }
+  .eval-label { text-align:left; font-size:12px; letter-spacing:2px; color:#8fa6b8; margin:0 0 10px;
+    padding-bottom:4px; border-bottom:1px solid rgba(201,162,39,.45); }
+  #eval-cards { display:flex; gap:10px; margin:0 0 20px; }
+  .eval-tier { flex:1; text-align:left; background:#1d2f3f; border:1px solid rgba(255,255,255,.08);
+    border-top:3px solid #3d5266; border-radius:6px; padding:11px 12px 10px; }
+  .eval-tier .tier-stars { font-size:15px; letter-spacing:2px; color:#5a6672; }
+  .eval-tier .tier-name { font-size:15px; font-weight:700; color:#ffffff; margin:3px 0 2px; }
+  .eval-tier .tier-desc { font-size:12px; line-height:1.4; color:#9fb4c4; min-height:33px; }
+  .eval-tier .tier-state { font-size:11px; font-weight:700; letter-spacing:1.5px; margin-top:6px; color:#5f7182; }
+  .eval-tier.st-done { border-top-color:#ffc933; }
+  .eval-tier.st-done .tier-stars { color:#ffc933; }
+  .eval-tier.st-done .tier-state { color:#ffc933; }
+  .eval-tier.st-next { border-top-color:#7fb2d9; }
+  .eval-tier.st-next .tier-state { color:#7fb2d9; }
+  #btn-eval-retry, #btn-eval-home { display:block; width:100%; font-size:17px; font-weight:700; letter-spacing:1.5px;
+    cursor:pointer; border:none; border-radius:6px; padding:13px 20px; margin-top:10px; text-transform:uppercase;
+    transition:transform .12s ease, box-shadow .12s ease; }
+  #btn-eval-retry { color:#231a02; background:linear-gradient(180deg,#ffd964,#f0b41c);
+    box-shadow:0 6px 20px rgba(240,180,28,.35); }
+  #btn-eval-home { color:#06280f; background:linear-gradient(180deg,#8bf0a4,#43c465);
+    box-shadow:0 6px 20px rgba(60,200,100,.35); }
+  #btn-eval-retry:hover, #btn-eval-home:hover { transform:translateY(-2px); }
+  #btn-eval-retry:active, #btn-eval-home:active { transform:scale(.98); }
+  #eval-card .hint { color:#7d93a5; }
+  @media (max-width: 600px) {
+    #eval-cards { flex-direction:column; }
+    .eval-tier .tier-desc { min-height:0; }
+    #eval-title { font-size:24px; }
+    #eval-stars { font-size:34px; }
+  }
 
   /* ---------- Destello de choque ---------- */
   #crash-flash { position:fixed; inset:0; z-index:40; background:#d21f1f; opacity:0;
@@ -100,6 +136,7 @@
 <div id="hud">
   <div class="title">🌴 Selva Amazónica<small>ABELARDO Q · ESCENARIO WEB</small></div>
   <a id="back-link" href="../index.html">← Volver al juego</a>
+  <button id="btn-mute" title="Silenciar / reactivar la música (tecla M)">🔊</button>
   <div id="game-hud"><span id="gh-bills">💵 0/20</span> · <span id="gh-lives">❤️❤️❤️</span> · <span id="gh-time">⏱ 00:00</span> · <span id="gh-target">Objetivo a 0 m</span></div>
   <div id="target-arrow">➤</div>
   <div id="hud-msg"></div>
@@ -119,6 +156,7 @@
         <li><b>← →</b> o <b>A / D</b> — girar</li>
         <li><b>↑ ↓</b> o <b>W / S</b> — subir / bajar</li>
         <li><b>Mayús (Shift)</b> — turbo &nbsp;·&nbsp; <b>Espacio</b> — freno suave</li>
+        <li><b>M</b> — silenciar / reactivar la música</li>
       </ul>
       <h2>Mando (PlayStation / Xbox)</h2>
       <ul>
@@ -131,12 +169,38 @@
   </div>
 </div>
 
-<div id="result-panel">
-  <div id="result-card">
-    <h1 id="result-title">💥 Te has estrellado</h1>
-    <p id="result-stats"></p>
-    <button id="btn-retry">Reintentar</button>
-    <p class="hint">También con la tecla R o el botón ✕ (Cross) del mando</p>
+<div id="eval-panel">
+  <div id="eval-card">
+    <h1 id="eval-title">MISIÓN CUMPLIDA</h1>
+    <div id="eval-stars"><span>★</span><span>★</span><span>★</span></div>
+    <div id="eval-score">PUNTAJE 0000</div>
+    <p id="eval-stats">BILLETES 0/20 · IMPACTOS 0 · TIEMPO 00:00</p>
+    <p id="eval-status">SELVA AMAZÓNICA · MISIÓN COMPLETADA</p>
+    <p id="eval-best">MEJOR PUNTAJE 0000</p>
+    <p class="eval-label">TU EVALUACIÓN</p>
+    <div id="eval-cards">
+      <div class="eval-tier" id="eval-tier-1">
+        <div class="tier-stars">★</div>
+        <div class="tier-name">Misión completada</div>
+        <div class="tier-desc">Completar la misión</div>
+        <div class="tier-state">POR CONSEGUIR</div>
+      </div>
+      <div class="eval-tier" id="eval-tier-2">
+        <div class="tier-stars">★★</div>
+        <div class="tier-name">Gran dominio</div>
+        <div class="tier-desc">14+ billetes · Máximo 1 impacto</div>
+        <div class="tier-state">POR CONSEGUIR</div>
+      </div>
+      <div class="eval-tier" id="eval-tier-3">
+        <div class="tier-stars">★★★</div>
+        <div class="tier-name">Vuelo perfecto</div>
+        <div class="tier-desc">20 billetes · 0 impactos</div>
+        <div class="tier-state">POR CONSEGUIR</div>
+      </div>
+    </div>
+    <button id="btn-eval-retry">Reintentar misión</button>
+    <button id="btn-eval-home">Volver a portada</button>
+    <p class="hint">Reintentar también con la tecla R o el botón ✕ (Cross) del mando</p>
   </div>
 </div>
 
@@ -1136,6 +1200,217 @@ function playRustle() {
   } catch (e) { /* sin sonido, sin error */ }
 }
 
+// ---------- Música de fondo sintetizada (WebAudio, sin ficheros) ----------
+// Aventura en Re menor (Dm – Bb – F – C) a ~104 BPM: pads de acordes, bajo,
+// shaker, melodía pentatónica tipo marimba con respuestas de flauta y cantos
+// de pájaro ambientales. Todo sobre el mismo AudioContext que los efectos.
+var MUSIC_VOL = 0.5;
+var MUSIC_BPM = 104;
+var BAR_DUR = 4 * 60 / MUSIC_BPM;                    // 1 acorde por compás
+var CHORDS = [
+  { root: 38, tones: [50, 53, 57, 62] },             // Dm: D2 · D3 F3 A3 D4
+  { root: 34, tones: [46, 50, 53, 58] },             // Bb: Bb1 · Bb2 D3 F3 Bb3
+  { root: 41, tones: [53, 57, 60, 65] },             // F:  F2 · F3 A3 C4 F4
+  { root: 36, tones: [48, 52, 55, 60] }              // C:  C2 · C3 E3 G3 C4
+];
+var PENTA = [62, 65, 67, 69, 72, 74];                // pentatónica de Re menor
+var music = {
+  playing: false, muted: false, ducked: false,
+  gain: null, timer: null, chirpTimer: null,
+  bar: 0, nextBarTime: 0, noiseBuf: null, nodes: [],
+  melIdx: 2
+};
+var muteBtn = document.getElementById('btn-mute');
+function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+function regNode(n) { music.nodes.push(n); }
+function musicApplyGain() {
+  if (!music.gain || !audioCtx) return;
+  try {
+    var target = music.muted ? 0 : (music.ducked ? MUSIC_VOL * 0.4 : MUSIC_VOL);
+    music.gain.gain.setTargetAtTime(target, audioCtx.currentTime, 0.25);
+  } catch (e) { /* sin música, sin error */ }
+}
+function musicInit() {
+  if (!audioCtx || music.gain) return;
+  try {
+    music.gain = audioCtx.createGain();
+    music.gain.gain.value = music.muted ? 0 : MUSIC_VOL;
+    music.gain.connect(audioCtx.destination);
+  } catch (e) { music.gain = null; return; }
+  try {
+    var len = Math.floor(audioCtx.sampleRate * 1);
+    music.noiseBuf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    var d = music.noiseBuf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  } catch (e) { music.noiseBuf = null; }
+}
+function padChord(tones, t0) {
+  var lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 780; lp.Q.value = 0.4;
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(0.05, t0 + 1.15);                 // ataque lento
+  g.gain.setValueAtTime(0.05, t0 + BAR_DUR - 0.1);
+  g.gain.linearRampToValueAtTime(0.0001, t0 + BAR_DUR + 0.55);     // cola solapada
+  lp.connect(g); g.connect(music.gain);
+  for (var i = 0; i < tones.length; i++) {
+    [-7, 7].forEach(function (cents) {                             // dos saws desafinados por nota
+      var o = audioCtx.createOscillator();
+      o.type = 'sawtooth'; o.frequency.value = mtof(tones[i]);
+      if (o.detune) o.detune.value = cents;
+      o.connect(lp);
+      o.start(t0); o.stop(t0 + BAR_DUR + 0.65);
+      regNode(o);
+    });
+  }
+}
+function bassNote(midi, t0, dur, vol) {
+  var o = audioCtx.createOscillator(); o.type = 'triangle'; o.frequency.value = mtof(midi);
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol || 0.2, t0 + 0.03);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(music.gain);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+  regNode(o);
+}
+function shakerHit(t0, vol) {
+  if (!music.noiseBuf) return;
+  var src = audioCtx.createBufferSource(); src.buffer = music.noiseBuf;
+  src.playbackRate.value = 1.7;
+  var hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6500;
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.05);
+  src.connect(hp); hp.connect(g); g.connect(music.gain);
+  src.start(t0, Math.random() * 0.5); src.stop(t0 + 0.07);
+  regNode(src);
+}
+function pluck(midi, t0, vol) {                        // marimba: senoidal+triangular, caída rápida
+  var f = mtof(midi);
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol || 0.13, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.38);
+  var g2 = audioCtx.createGain(); g2.gain.value = 0.35;
+  var o1 = audioCtx.createOscillator(); o1.type = 'sine'; o1.frequency.value = f;
+  var o2 = audioCtx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = f;
+  var o3 = audioCtx.createOscillator(); o3.type = 'sine'; o3.frequency.value = f * 2;
+  o1.connect(g); o2.connect(g); o3.connect(g2); g2.connect(g);
+  g.connect(music.gain);
+  [o1, o2, o3].forEach(function (o) { o.start(t0); o.stop(t0 + 0.45); regNode(o); });
+}
+function flute(midi, t0, dur) {                        // respuesta de flauta: senoidal con vibrato
+  var o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.value = mtof(midi);
+  var lfo = audioCtx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 5.4;
+  var lg = audioCtx.createGain(); lg.gain.value = mtof(midi) * 0.006;
+  lfo.connect(lg); lg.connect(o.frequency);
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(0.07, t0 + 0.12);
+  g.gain.setValueAtTime(0.07, Math.max(t0 + 0.13, t0 + dur - 0.18));
+  g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(music.gain);
+  o.start(t0); lfo.start(t0);
+  o.stop(t0 + dur + 0.05); lfo.stop(t0 + dur + 0.05);
+  regNode(o); regNode(lfo);
+}
+function scheduleBar(bar, t0) {
+  var ch = CHORDS[bar % 4];
+  padChord(ch.tones, t0);
+  bassNote(ch.root, t0, BAR_DUR * 0.45);
+  bassNote(ch.root, t0 + BAR_DUR * 0.5, BAR_DUR * 0.3);
+  bassNote(ch.root + 7, t0 + BAR_DUR * 0.78, BAR_DUR * 0.18, 0.14);
+  var sixteenth = BAR_DUR / 16;
+  for (var i = 0; i < 16; i++) {
+    shakerHit(t0 + i * sixteenth, i % 4 === 0 ? 0.10 : (i % 2 === 0 ? 0.055 : 0.028));
+  }
+  // Melodía pentatónica: paseo aleatorio por la escala en corcheas con silencios
+  var eighth = BAR_DUR / 8;
+  for (var s = 0; s < 8; s++) {
+    var play = s === 0 ? Math.random() < 0.72 : Math.random() < 0.45;
+    if (!play) continue;
+    music.melIdx = clamp(music.melIdx + Math.round(rand(-2, 2)), 0, PENTA.length - 1);
+    pluck(PENTA[music.melIdx], t0 + s * eighth, 0.11 + Math.random() * 0.04);
+  }
+  if (bar % 4 === 3) flute(PENTA[0] + 12, t0 + BAR_DUR * 0.7, BAR_DUR * 0.28);  // cierre de ciclo
+}
+function musicTick() {                                 // secuenciador por lookahead
+  if (!music.playing || !audioCtx) return;
+  try {
+    while (music.nextBarTime < audioCtx.currentTime + 0.15) {
+      scheduleBar(music.bar, music.nextBarTime);
+      music.bar++;
+      music.nextBarTime += BAR_DUR;
+    }
+    if (music.nodes.length > 600) music.nodes.splice(0, music.nodes.length - 600);
+  } catch (e) { /* la música nunca debe tumbar el juego */ }
+}
+function playAmbientChirp() {                          // canto de pájaro ambiental (suave)
+  if (!audioCtx || !music.gain) return;
+  try {
+    var t0 = audioCtx.currentTime + 0.02;
+    var n = 2 + Math.floor(Math.random() * 3);
+    var base = 2800 + Math.random() * 900;
+    for (var i = 0; i < n; i++) {
+      var tt = t0 + i * 0.17;
+      var o = audioCtx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(base * (1 + Math.random() * 0.15), tt);
+      o.frequency.exponentialRampToValueAtTime(base * 0.68, tt + 0.09);
+      var g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.0001, tt);
+      g.gain.exponentialRampToValueAtTime(0.04, tt + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.1);
+      o.connect(g); g.connect(music.gain);
+      o.start(tt); o.stop(tt + 0.12);
+      regNode(o);
+    }
+  } catch (e) { /* sin canto, sin error */ }
+}
+function scheduleChirp() {
+  if (music.chirpTimer) clearTimeout(music.chirpTimer);
+  music.chirpTimer = setTimeout(function () {
+    if (!music.playing) return;
+    playAmbientChirp();
+    scheduleChirp();
+  }, 7000 + Math.random() * 8000);                     // cada 7–15 s
+}
+function musicStart() {
+  try {
+    ensureAudio();
+    if (!audioCtx) return;
+    musicInit();
+    if (!music.gain) return;
+    music.ducked = false;
+    if (music.playing) { musicApplyGain(); return; }
+    music.playing = true;
+    music.bar = 0;
+    music.nextBarTime = audioCtx.currentTime + 0.06;
+    musicApplyGain();
+    music.timer = setInterval(musicTick, 27);
+    scheduleChirp();
+  } catch (e) { music.playing = false; }
+}
+function musicStop() {
+  music.playing = false;
+  if (music.timer) { clearInterval(music.timer); music.timer = null; }
+  if (music.chirpTimer) { clearTimeout(music.chirpTimer); music.chirpTimer = null; }
+  try {
+    if (music.gain && audioCtx) music.gain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.08);
+    for (var i = 0; i < music.nodes.length; i++) { try { music.nodes[i].stop(); } catch (e) {} }
+  } catch (e) { /* sin música, sin error */ }
+  music.nodes.length = 0;
+}
+function musicDuck(on) {
+  music.ducked = !!on;
+  if (music.playing) musicApplyGain();
+}
+function toggleMute() {
+  music.muted = !music.muted;
+  if (muteBtn) muteBtn.textContent = music.muted ? '🔇' : '🔊';
+  musicApplyGain();
+}
+if (muteBtn) muteBtn.addEventListener('click', function (e) { e.preventDefault(); toggleMute(); });
+
 // --- Partículas sueltas: plumas (atropello) y hojas (cruzar copas) ---
 var featherGeo = new THREE.PlaneGeometry(0.3, 0.16);
 var leafGeoFx = new THREE.PlaneGeometry(0.36, 0.24);
@@ -1185,10 +1460,14 @@ var ghBills = document.getElementById('gh-bills');
 var ghTime = document.getElementById('gh-time');
 var ghTarget = document.getElementById('gh-target');
 var arrowEl = document.getElementById('target-arrow');
-var resultPanel = document.getElementById('result-panel');
-var resultTitle = document.getElementById('result-title');
-var resultStats = document.getElementById('result-stats');
-var retryBtn = document.getElementById('btn-retry');
+var evalPanel = document.getElementById('eval-panel');
+var evalTitle = document.getElementById('eval-title');
+var evalScoreEl = document.getElementById('eval-score');
+var evalStatsEl = document.getElementById('eval-stats');
+var evalStatusEl = document.getElementById('eval-status');
+var evalBestEl = document.getElementById('eval-best');
+var evalStarEls = document.querySelectorAll('#eval-stars span');
+var evalTierEls = [document.getElementById('eval-tier-1'), document.getElementById('eval-tier-2'), document.getElementById('eval-tier-3')];
 var crashFlash = document.getElementById('crash-flash');
 var ghLives = document.getElementById('gh-lives');
 var hudMsg = document.getElementById('hud-msg');
@@ -1206,6 +1485,74 @@ function fmtTime(s) {
   s = Math.max(0, Math.floor(s));
   var m = Math.floor(s / 60), ss = s % 60;
   return (m < 10 ? '0' : '') + m + ':' + (ss < 10 ? '0' : '') + ss;
+}
+function pad4(n) { var s = '' + Math.max(0, Math.floor(n)); while (s.length < 4) s = '0' + s; return s; }
+// Mejor puntaje del escenario (localStorage; solo se actualiza en victoria)
+var BEST_KEY = 'abelardoq_amazonas_best';
+var bestMem = 0;
+function getBestScore() {
+  try {
+    var v = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
+    return isNaN(v) ? bestMem : v;
+  } catch (e) { return bestMem; }
+}
+function saveBestScore(v) {
+  bestMem = v;
+  try { localStorage.setItem(BEST_KEY, '' + v); } catch (e) { /* queda en memoria */ }
+}
+var finalScore = 0;
+// Pantalla de evaluación final estilo «Misión cumplida» del juego original
+function showEval(won, cause) {
+  var impacts = birdHits;
+  var score = won ? currentScore() : billCount * 150;
+  finalScore = score;
+  var best = getBestScore();
+  if (won && score > best) { best = score; saveBestScore(best); }
+  var tier = [
+    !!won,                                                        // ★ Misión completada
+    !!won && billCount >= 14 && impacts <= 1,                     // ★★ Gran dominio
+    !!won && billCount >= TOTAL_BILLS && impacts === 0            // ★★★ Vuelo perfecto
+  ];
+  var stars = won ? (1 + (tier[1] ? 1 : 0) + (tier[2] ? 1 : 0)) : 0;
+  evalTitle.textContent = won ? 'MISIÓN CUMPLIDA' : 'MISIÓN FALLIDA';
+  for (var i = 0; i < evalStarEls.length; i++) {
+    if (i < stars) evalStarEls[i].classList.add('on'); else evalStarEls[i].classList.remove('on');
+  }
+  evalScoreEl.textContent = 'PUNTAJE ' + pad4(score);
+  evalStatsEl.textContent = 'BILLETES ' + billCount + '/' + TOTAL_BILLS + ' · IMPACTOS ' + impacts + ' · TIEMPO ' + fmtTime(gameTime);
+  evalStatusEl.textContent = won ? 'SELVA AMAZÓNICA · MISIÓN COMPLETADA' : (cause === 'lives' ? 'SIN VIDAS' : 'TE HAS ESTRELLADO');
+  evalBestEl.textContent = 'MEJOR PUNTAJE ' + pad4(best);
+  var nextAssigned = false;
+  for (var k = 0; k < 3; k++) {
+    var el = evalTierEls[k];
+    var st = el.querySelector('.tier-state');
+    el.classList.remove('st-done', 'st-next', 'st-todo');
+    if (tier[k]) { el.classList.add('st-done'); st.textContent = 'CONSEGUIDA'; }
+    else if (!nextAssigned) { el.classList.add('st-next'); st.textContent = 'SIGUIENTE OBJETIVO'; nextAssigned = true; }
+    else { el.classList.add('st-todo'); st.textContent = 'POR CONSEGUIR'; }
+  }
+  evalPanel.style.display = 'flex';
+  musicDuck(true);                       // en la evaluación la música baja al 40 %
+}
+// «Volver a portada»: de vuelta a la pantalla inicial (idle, música parada)
+function goHome() {
+  gameState = 'idle'; flying = false;
+  plane.pos.set(riverX(startZ), 14, startZ);
+  plane.yaw = Math.atan((riverX(startZ + 1) - riverX(startZ - 1)) / 2);
+  plane.speed = 17; plane.curSpeed = 17; plane.bank = 0; plane.pitchVis = 0;
+  for (var i = 0; i < bills.length; i++) { bills[i].collected = false; bills[i].group.visible = true; }
+  billCount = 0; gameTime = 0;
+  lives = 3; birdHits = 0; invulnT = 0; canopyCool = 0; wasInCanopy = false;
+  clearFx();
+  hudMsg.classList.remove('show');
+  ghLives.classList.remove('invuln');
+  hitFlash.style.opacity = '0';
+  evalPanel.style.display = 'none';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'flex';
+  document.getElementById('turn-warning').style.display = 'none';
+  crashFlash.style.opacity = '0';
+  musicStop();
 }
 function currentScore() { return billCount * 150 + Math.max(0, 3000 - Math.floor(gameTime) * 10); }
 function currentTarget() {
@@ -1230,20 +1577,14 @@ function doCrash() {
   crashFlash.style.opacity = '0.85';
   setTimeout(function () { crashFlash.style.opacity = '0'; }, 130);
   document.getElementById('turn-warning').style.display = 'none';
-  resultTitle.textContent = '💥 Te has estrellado';
-  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b><br>🦜 Pájaros atropellados: <b>' + birdHits + '</b>';
-  retryBtn.textContent = 'Reintentar';
-  resultPanel.style.display = 'flex';
+  showEval(false, 'crash');
 }
 function doWin() {
   if (gameState !== 'playing') return;
   gameState = 'won'; flying = false;
   playWin();
   document.getElementById('turn-warning').style.display = 'none';
-  resultTitle.textContent = '🏁 ¡Misión completada!';
-  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b><br>🦜 Pájaros atropellados: <b>' + birdHits + '</b><br>🏆 Puntuación: <b>' + currentScore() + '</b>';
-  retryBtn.textContent = 'Volver a jugar';
-  resultPanel.style.display = 'flex';
+  showEval(true);
 }
 // Atropello de un guacamayo: −1 vida, plumas, graznido e invulnerabilidad breve
 function doBirdHit(bird, wpos) {
@@ -1265,10 +1606,7 @@ function doGameOver() {
   gameState = 'gameover'; flying = false;
   playSoftCrash();
   document.getElementById('turn-warning').style.display = 'none';
-  resultTitle.textContent = '💔 Sin vidas';
-  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b><br>🦜 Pájaros atropellados: <b>' + birdHits + '</b>';
-  retryBtn.textContent = 'Reintentar';
-  resultPanel.style.display = 'flex';
+  showEval(false, 'lives');
 }
 function beginRun() {
   plane.pos.set(riverX(startZ), 14, startZ);
@@ -1284,12 +1622,14 @@ function beginRun() {
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('hud').style.display = 'block';
   document.getElementById('turn-warning').style.display = 'none';
-  resultPanel.style.display = 'none';
+  evalPanel.style.display = 'none';
   crashFlash.style.opacity = '0';
   ensureAudio();
+  musicStart();
   updateGameHud();
 }
-retryBtn.addEventListener('click', function () { startFlight(); });
+document.getElementById('btn-eval-retry').addEventListener('click', function () { startFlight(); });
+document.getElementById('btn-eval-home').addEventListener('click', function () { goHome(); });
 window.addEventListener('keydown', function (e) {
   if (e.code === 'KeyR' && (gameState === 'crashed' || gameState === 'won' || gameState === 'gameover')) startFlight();
 });
@@ -1363,6 +1703,14 @@ window.__scenarioGame = {
   },
   getLives: function () { return lives; },
   getBirdHits: function () { return birdHits; },
+  getImpacts: function () { return birdHits; },
+  getScore: function () {
+    if (gameState === 'won') return currentScore();
+    if (gameState === 'crashed' || gameState === 'gameover') return billCount * 150;
+    return currentScore();
+  },
+  getBest: function () { return getBestScore(); },
+  isMusicPlaying: function () { return music.playing; },
   forceWin: function () { if (gameState === 'idle') beginRun(); doWin(); },
   forceCrash: function () { if (gameState === 'idle') beginRun(); doCrash(); },
   // Simula un atropello respetando estado e invulnerabilidad; devuelve las vidas restantes
@@ -1387,6 +1735,7 @@ var keys = {};
 window.addEventListener('keydown', function (e) {
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].indexOf(e.code) >= 0) e.preventDefault();
   keys[e.code] = true;
+  if (e.code === 'KeyM') toggleMute();
   if (!flying && (e.code === 'Enter' || e.code === 'NumpadEnter')) startFlight();
 });
 window.addEventListener('keyup', function (e) { keys[e.code] = false; });

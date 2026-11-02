@@ -30,14 +30,48 @@
   #g-arrow { display:inline-block; color:#ffd970; font-size:18px; transition:transform .12s linear; }
   #flash { position:fixed; inset:0; z-index:15; pointer-events:none; opacity:0;
     background:radial-gradient(ellipse at center, rgba(255,60,30,.35), rgba(200,10,0,.65)); }
+  #graze-flash { position:fixed; inset:0; z-index:14; pointer-events:none; opacity:0;
+    box-shadow:inset 0 0 90px rgba(255,190,80,.55); }
+  #music-btn { position:fixed; top:64px; right:16px; z-index:12; cursor:pointer; font-size:15px;
+    color:#ffd9a8; background:rgba(20,10,25,.45); border:1px solid rgba(255,178,107,.45);
+    border-radius:999px; padding:7px 12px; }
+  #music-btn:hover { background:rgba(60,25,40,.65); }
   #endpanel { position:fixed; inset:0; z-index:20; display:none; align-items:center; justify-content:center;
     background:rgba(10,4,14,.55); }
-  #end-text { font-size:16.5px; line-height:1.65; margin:0 0 20px; }
-  #end-text b { color:#ffb26b; font-variant-numeric:tabular-nums; }
-  #end-btn { pointer-events:auto; cursor:pointer; font-size:19px; font-weight:700; color:#2a1408;
-    background:linear-gradient(180deg,#ffc98a,#ff8f4d); border:none; border-radius:999px; padding:13px 44px;
-    box-shadow:0 6px 24px rgba(255,140,70,.45); }
+  /* --- Pantalla de evaluación final (estilo «MISIÓN CUMPLIDA» del juego original) --- */
+  .eval-card { text-align:center; max-width:640px; width:92vw; max-height:94vh; overflow:auto;
+    padding:24px 30px 22px; background:#16222e; border:1px solid rgba(255,197,66,.75);
+    border-radius:14px; box-shadow:0 18px 60px rgba(0,0,0,.6); color:#e8eef4; margin:0 14px; }
+  .eval-card h1 { margin:0 0 2px; font-size:30px; font-weight:800; letter-spacing:3px; color:#ffc942; }
+  #end-stars { font-size:38px; letter-spacing:10px; line-height:1.15; }
+  #end-stars .star { color:#5a6672; }
+  #end-stars .star.on { color:#ffd54f; text-shadow:0 0 14px rgba(255,197,66,.55); }
+  #end-score { font-size:34px; font-weight:800; letter-spacing:2px; margin:2px 0 6px; font-variant-numeric:tabular-nums; }
+  #end-stats { font-size:14px; letter-spacing:1px; margin:0 0 4px; font-variant-numeric:tabular-nums; }
+  #end-tagline { color:#ffc942; font-weight:700; letter-spacing:1.5px; font-size:14.5px; margin:0 0 2px; }
+  #end-best { font-size:13.5px; letter-spacing:1.5px; opacity:.85; margin:0 0 14px; font-variant-numeric:tabular-nums; }
+  .eval-head { text-align:left; font-size:12px; letter-spacing:2px; opacity:.75;
+    border-top:1px solid rgba(255,255,255,.14); padding-top:12px; margin-bottom:8px; }
+  .eval-cards { display:flex; gap:10px; margin-bottom:18px; }
+  .eval-item { flex:1; background:rgba(255,255,255,.05); border-top:3px solid rgba(255,197,66,.5);
+    padding:10px 8px 12px; border-radius:4px; }
+  .eval-item .eval-stars { color:#ffc942; font-size:15px; letter-spacing:2px; }
+  .eval-item .eval-name { font-weight:700; font-size:14.5px; margin:3px 0; }
+  .eval-item .eval-desc { font-size:12px; opacity:.8; line-height:1.45; min-height:34px; }
+  .eval-item .eval-status { font-size:11.5px; font-weight:800; letter-spacing:1.2px; }
+  .eval-status.got { color:#ffc942; }
+  .eval-status.next { color:#9fb4c8; }
+  .eval-status.todo { color:#5f7080; }
+  .eval-btns { display:flex; flex-direction:column; gap:9px; }
+  #end-btn { pointer-events:auto; cursor:pointer; font-size:17px; font-weight:800; letter-spacing:1px;
+    color:#231600; background:linear-gradient(180deg,#ffd968,#f5a623); border:none; border-radius:6px;
+    padding:13px 20px; width:100%; }
   #end-btn:hover { filter:brightness(1.07); }
+  #end-btn2 { pointer-events:auto; cursor:pointer; font-size:17px; font-weight:800; letter-spacing:1px;
+    color:#ffffff; background:linear-gradient(180deg,#43a047,#2e7d32); border:none; border-radius:6px;
+    padding:13px 20px; width:100%; }
+  #end-btn2:hover { filter:brightness(1.1); }
+  @media (max-width:560px){ .eval-cards{flex-direction:column;} .eval-item .eval-desc{min-height:0;} }
   .mission { font-size:14.5px; line-height:1.6; margin:0 0 20px; color:#ffe1bd; }
   #intro { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
     background:radial-gradient(ellipse at 50% 78%, rgba(255,130,60,.30), rgba(16,8,24,.88) 62%); }
@@ -64,16 +98,46 @@
 <div class="hud" id="hud-data">Velocidad <b id="hud-speed">0</b> km/h &nbsp;·&nbsp; Altitud <b id="hud-alt">0</b> m</div>
 <div class="hud" id="warn">⤺ Girando de vuelta a la ciudad</div>
 <a id="back" href="../index.html">← Volver al juego</a>
+<button id="music-btn" title="Activar / silenciar la música (tecla M)">🔊</button>
 <div id="pad-pill">🎮 Mando conectado</div>
 <div class="hud" id="hud-game" style="display:none">💵 <b id="g-bills">0/20</b> &nbsp;·&nbsp; ⏱ <b id="g-time">00:00</b> &nbsp;·&nbsp; <span id="g-target">Objetivo</span> a <b id="g-dist">0</b> m <span id="g-arrow">➤</span></div>
 <div id="flash"></div>
+<div id="graze-flash"></div>
 
 <div id="endpanel">
-  <div class="card">
-    <h1 id="end-title">💥 Te has estrellado</h1>
-    <p id="end-text"></p>
-    <button id="end-btn">Reintentar</button>
-    <div class="hint">También puedes reiniciar con la tecla R o el botón ✕ del mando.</div>
+  <div class="eval-card">
+    <h1 id="end-title">MISIÓN CUMPLIDA</h1>
+    <div id="end-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+    <div id="end-score">PUNTAJE 0000</div>
+    <p id="end-stats">BILLETES 0/20 · IMPACTOS 0 · TIEMPO 00:00</p>
+    <p id="end-tagline">LOS ÁNGELES · MISIÓN COMPLETADA</p>
+    <p id="end-best">MEJOR PUNTAJE 0000</p>
+    <div class="eval-head">TU EVALUACIÓN</div>
+    <div class="eval-cards">
+      <div class="eval-item">
+        <div class="eval-stars">★</div>
+        <div class="eval-name">Misión completada</div>
+        <div class="eval-desc">Completar la misión</div>
+        <div class="eval-status got" id="ev-status-1">CONSEGUIDA</div>
+      </div>
+      <div class="eval-item">
+        <div class="eval-stars">★★</div>
+        <div class="eval-name">Gran dominio</div>
+        <div class="eval-desc">14+ billetes · Máximo 1 impacto</div>
+        <div class="eval-status next" id="ev-status-2">SIGUIENTE OBJETIVO</div>
+      </div>
+      <div class="eval-item">
+        <div class="eval-stars">★★★</div>
+        <div class="eval-name">Vuelo perfecto</div>
+        <div class="eval-desc">20 billetes · 0 impactos</div>
+        <div class="eval-status todo" id="ev-status-3">POR CONSEGUIR</div>
+      </div>
+    </div>
+    <div class="eval-btns">
+      <button id="end-btn">REINTENTAR MISIÓN</button>
+      <button id="end-btn2">VOLVER A PORTADA</button>
+    </div>
+    <div class="hint">Reintentar también con la tecla R o el botón ✕ del mando.</div>
   </div>
 </div>
 
@@ -952,6 +1016,8 @@ var TOTAL_BILLS = 20;
 var gameState = 'ready'; // ready | flying | crashed | won
 var billsCollected = 0;
 var raceTime = 0;
+var impacts = 0;    // rozaduras contra obstáculos (sin llegar a chocar)
+var lastScore = 0;
 
 // ---- Colisionadores: cajas AABB {x, z, halfW, halfD, y0, y1} ----
 var colliders = [];
@@ -1174,6 +1240,177 @@ function playWin() {
   [523, 659, 784, 1046].forEach(function (f, i) { beep(f, i * 0.13, 0.28, 'triangle', 0.18); });
 }
 
+// ---- Música de fondo sintetizada (WebAudio, sin ficheros) ----
+// Bucle épico Dm – Bb – F – C a 112 BPM, en el espíritu aventurero /
+// orquestal de la música del nivel 1 del juego original, con sabor
+// urbano al atardecer: pads de acordes, bajo marcado, percusión
+// sintetizada y melodía heroica tipo metal en compases alternos.
+// Secuenciador por lookahead sobre el MISMO AudioContext de los efectos.
+var MUSIC_BPM = 112;
+var MUSIC_BAR = 4 * 60 / MUSIC_BPM;   // segundos por compás (1 acorde)
+var MUSIC_BEAT = 60 / MUSIC_BPM;
+var CHORD_PROG = [
+  { pad: [146.83, 174.61, 220.00], bass: 73.42 },  // Dm
+  { pad: [116.54, 146.83, 174.61], bass: 58.27 },  // Bb
+  { pad: [174.61, 220.00, 261.63], bass: 87.31 },  // F
+  { pad: [130.81, 164.81, 196.00], bass: 65.41 }   // C
+];
+var MELODY_BARS = { // [tiempoEnPulsos, duraciónEnPulsos, frecuencia]
+  1: [[0, 1, 440.00], [1, 1, 466.16], [2, 2, 587.33]],
+  3: [[0, 1, 392.00], [1, 1, 440.00], [2, 1, 523.25], [3, 1, 659.25]]
+};
+var musicGain = null, musicTimer = null, musicPlaying = false;
+var musicBarIdx = 0, musicNextTime = 0, musicLevel = 1, musicMuted = false;
+var noiseBuf = null;
+function getNoiseBuffer() {
+  if (noiseBuf) return noiseBuf;
+  var len = Math.floor(audioCtx.sampleRate * 0.5);
+  noiseBuf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  var d = noiseBuf.getChannelData(0);
+  for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return noiseBuf;
+}
+function applyMusicGain() {
+  if (!musicGain || !audioCtx) return;
+  try {
+    musicGain.gain.setTargetAtTime(musicMuted ? 0 : 0.5 * musicLevel, audioCtx.currentTime, 0.1);
+  } catch (e) { /* ignorar */ }
+}
+function padChord(freqs, t, dur) {
+  var lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 750; lp.Q.value = 0.4;
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.05, t + 0.5);
+  g.gain.setValueAtTime(0.05, t + Math.max(0.5, dur - 0.5));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  lp.connect(g); g.connect(musicGain);
+  freqs.forEach(function (f) {
+    [-7, 7].forEach(function (cents) {
+      var o = audioCtx.createOscillator();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(f, t); o.detune.value = cents;
+      o.connect(lp); o.start(t); o.stop(t + dur + 0.05);
+    });
+  });
+}
+function bassNote(freq, t, dur) {
+  var lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 320;
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  var o = audioCtx.createOscillator();
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(freq, t);
+  o.connect(lp); lp.connect(g); g.connect(musicGain);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+function kickDrum(t) {
+  var o = audioCtx.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(150, t);
+  o.frequency.exponentialRampToValueAtTime(40, t + 0.11);
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.5, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+  o.connect(g); g.connect(musicGain);
+  o.start(t); o.stop(t + 0.16);
+}
+function noiseHit(t, dur, filterType, freq, vol) {
+  var src = audioCtx.createBufferSource(); src.buffer = getNoiseBuffer();
+  src.playbackRate.value = 0.9 + Math.random() * 0.2;
+  var f = audioCtx.createBiquadFilter(); f.type = filterType; f.frequency.value = freq;
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(f); f.connect(g); g.connect(musicGain);
+  src.start(t); src.stop(t + dur + 0.05);
+}
+function melodyNote(freq, t, dur) {
+  var lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(900, t);
+  lp.frequency.exponentialRampToValueAtTime(2600, t + Math.min(0.18, dur * 0.4));
+  lp.frequency.exponentialRampToValueAtTime(900, t + dur);
+  var g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.13, t + 0.06);
+  g.gain.setValueAtTime(0.13, t + Math.max(0.06, dur - 0.09));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  var o = audioCtx.createOscillator();
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(freq, t);
+  o.connect(lp); lp.connect(g); g.connect(musicGain);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+function scheduleBar(idx, t) {
+  var ch = CHORD_PROG[idx];
+  padChord(ch.pad, t, MUSIC_BAR);
+  var step = MUSIC_BAR / 8; // corcheas
+  [0, 2, 3, 4, 6].forEach(function (s) { bassNote(ch.bass, t + s * step, step * 0.95); });
+  bassNote(ch.bass * 2, t + 7 * step, step * 0.9);
+  kickDrum(t); kickDrum(t + 4 * step);
+  noiseHit(t + 2 * step, 0.16, 'bandpass', 1800, 0.20);  // caja
+  noiseHit(t + 6 * step, 0.16, 'bandpass', 1800, 0.20);  // caja
+  for (var s2 = 0; s2 < 8; s2++) noiseHit(t + s2 * step, s2 === 7 ? 0.14 : 0.045, 'highpass', 7500, s2 === 7 ? 0.06 : 0.045); // charles
+  var mel = MELODY_BARS[idx];
+  if (mel) mel.forEach(function (n) { melodyNote(n[2], t + n[0] * MUSIC_BEAT, n[1] * MUSIC_BEAT * 0.95); });
+}
+function musicScheduler() {
+  if (!audioCtx) return;
+  try {
+    while (musicNextTime < audioCtx.currentTime + 0.12) {
+      scheduleBar(musicBarIdx, musicNextTime);
+      musicNextTime += MUSIC_BAR;
+      musicBarIdx = (musicBarIdx + 1) % CHORD_PROG.length;
+    }
+  } catch (e) { /* la música nunca debe romper el juego */ }
+}
+function startMusic() {
+  if (!audioCtx) return;
+  if (musicPlaying) { setMusicLevel(1); return; }
+  try {
+    if (!musicGain) { musicGain = audioCtx.createGain(); musicGain.connect(audioCtx.destination); }
+    musicLevel = 1;
+    musicGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    musicGain.gain.setTargetAtTime(musicMuted ? 0 : 0.5, audioCtx.currentTime, 0.1);
+    musicBarIdx = 0;
+    musicNextTime = audioCtx.currentTime + 0.06;
+    musicTimer = setInterval(musicScheduler, 25);
+    musicPlaying = true;
+  } catch (e) { /* sin música no pasa nada */ }
+}
+function stopMusic() {
+  if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+  musicPlaying = false;
+  if (musicGain && audioCtx) {
+    try { musicGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.08); } catch (e) { /* ignorar */ }
+  }
+}
+function setMusicLevel(frac) {
+  musicLevel = frac;
+  applyMusicGain();
+}
+function toggleMusicMute() {
+  musicMuted = !musicMuted;
+  applyMusicGain();
+  var b = document.getElementById('music-btn');
+  if (b) b.textContent = musicMuted ? '🔇' : '🔊';
+}
+document.getElementById('music-btn').addEventListener('click', toggleMusicMute);
+window.addEventListener('keydown', function (e) { if (e.code === 'KeyM') toggleMusicMute(); });
+
+// ---- Sonido de rozadura (roce breve y discreto) ----
+function playScrape() {
+  if (!audioCtx) return;
+  try {
+    var t0 = audioCtx.currentTime;
+    var src = audioCtx.createBufferSource(); src.buffer = getNoiseBuffer();
+    var f = audioCtx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1500; f.Q.value = 0.8;
+    var g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.09, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.12);
+    src.connect(f); f.connect(g); g.connect(audioCtx.destination);
+    src.start(t0); src.stop(t0 + 0.15);
+  } catch (e) { /* ignorar */ }
+}
+
 // ---- HUD de partida y paneles de fin ----
 var hudGame = document.getElementById('hud-game');
 var gBillsEl = document.getElementById('g-bills');
@@ -1182,10 +1419,11 @@ var gDistEl = document.getElementById('g-dist');
 var gTargetEl = document.getElementById('g-target');
 var gArrowEl = document.getElementById('g-arrow');
 var flashEl = document.getElementById('flash');
+var grazeFlashEl = document.getElementById('graze-flash');
 var endpanel = document.getElementById('endpanel');
 var endTitle = document.getElementById('end-title');
-var endText = document.getElementById('end-text');
 var endBtn = document.getElementById('end-btn');
+var endBtn2 = document.getElementById('end-btn2');
 
 function fmtTime(s) {
   var m = Math.floor(s / 60), ss = Math.floor(s % 60);
@@ -1233,7 +1471,45 @@ function stepGame(dt) {
       return;
     }
   }
+  // Rozaduras: cerca del obstáculo (caja expandida 2 m) sin llegar a tocarlo
+  checkGrazes();
   updateGameHud();
+}
+// Rozadura = la cámara queda a menos de 2 m por fuera de una caja de
+// obstáculo sin entrar en ella. Suma 1 a IMPACTOS, con enfriamiento de
+// 2 s por obstáculo y un máximo de 3 rozaduras contadas por obstáculo.
+var GRAZE_MARGIN = 2;
+var GRAZE_COOLDOWN = 2;
+var GRAZE_MAX_PER_OBSTACLE = 3;
+function checkGrazes() {
+  for (var j = 0; j < colliders.length; j++) {
+    var c = colliders[j];
+    if (pos.y > c.y0 - GRAZE_MARGIN && pos.y < c.y1 + GRAZE_MARGIN &&
+        Math.abs(pos.x - c.x) < c.halfW + GRAZE_MARGIN &&
+        Math.abs(pos.z - c.z) < c.halfD + GRAZE_MARGIN) {
+      // Dentro de la caja real sería choque (ya comprobado antes): no cuenta
+      if (pos.y > c.y0 && pos.y < c.y1 && Math.abs(pos.x - c.x) < c.halfW && Math.abs(pos.z - c.z) < c.halfD) continue;
+      if (raceTime - (c.lastGraze || -99) >= GRAZE_COOLDOWN && (c.grazeCount || 0) < GRAZE_MAX_PER_OBSTACLE) {
+        c.lastGraze = raceTime;
+        c.grazeCount = (c.grazeCount || 0) + 1;
+        impacts++;
+        playScrape();
+        flashGraze();
+      }
+      return; // como máximo una rozadura por frame
+    }
+  }
+}
+function flashGraze() {
+  grazeFlashEl.style.transition = 'none';
+  grazeFlashEl.style.opacity = '0.55';
+  setTimeout(function () {
+    grazeFlashEl.style.transition = 'opacity .3s';
+    grazeFlashEl.style.opacity = '0';
+  }, 50);
+}
+function resetGrazeState() {
+  colliders.forEach(function (c) { c.lastGraze = -99; c.grazeCount = 0; });
 }
 function animateGameObjects(t, dt) {
   bills.forEach(function (b) {
@@ -1247,31 +1523,77 @@ function animateGameObjects(t, dt) {
   }
   if (ringBeam) ringBeam.material.opacity = 0.11 + Math.sin(t * 2.4) * 0.04;
 }
+// ---- Pantalla de evaluación final (estilo «MISIÓN CUMPLIDA») ----
+var BEST_KEY = 'abelardoq_la_best_score';
+function readBest() {
+  try { return parseInt(localStorage.getItem(BEST_KEY) || '0', 10) || 0; } catch (e) { return 0; }
+}
+function saveBest(v) {
+  try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) { /* sin almacenamiento no pasa nada */ }
+}
+function pad4(n) {
+  var s = String(Math.max(0, Math.floor(n)));
+  while (s.length < 4) s = '0' + s;
+  return s;
+}
+function showEval(won) {
+  var secs = Math.floor(raceTime);
+  var score = won ? (billsCollected * 150 + Math.max(0, 3000 - secs * 10)) : billsCollected * 150;
+  lastScore = score;
+  // Logros anidados: completar < gran dominio < vuelo perfecto
+  var ach = [
+    !!won,
+    !!won && billsCollected >= 14 && impacts <= 1,
+    !!won && billsCollected >= TOTAL_BILLS && impacts === 0
+  ];
+  var level = 0;
+  ach.forEach(function (a) { if (a) level++; });
+  endTitle.textContent = won ? 'MISIÓN CUMPLIDA' : 'MISIÓN FALLIDA';
+  var starEls = document.getElementById('end-stars').children;
+  for (var i = 0; i < 3; i++) starEls[i].className = 'star' + (i < level ? ' on' : '');
+  document.getElementById('end-score').textContent = 'PUNTAJE ' + pad4(score);
+  document.getElementById('end-stats').textContent =
+    'BILLETES ' + billsCollected + '/' + TOTAL_BILLS + ' · IMPACTOS ' + impacts + ' · TIEMPO ' + fmtTime(raceTime);
+  var tag = document.getElementById('end-tagline');
+  tag.textContent = won ? 'LOS ÁNGELES · MISIÓN COMPLETADA' : 'TE HAS ESTRELLADO';
+  tag.style.color = won ? '#ffc942' : '#ff7a5c';
+  var bestEl = document.getElementById('end-best');
+  if (won) {
+    var best = readBest();
+    if (score > best) { best = score; saveBest(best); }
+    bestEl.textContent = 'MEJOR PUNTAJE ' + pad4(best);
+    bestEl.style.display = 'block';
+  } else {
+    bestEl.style.display = 'none';
+  }
+  var seenNext = false;
+  for (var j = 0; j < 3; j++) {
+    var st = document.getElementById('ev-status-' + (j + 1));
+    if (ach[j]) { st.textContent = 'CONSEGUIDA'; st.className = 'eval-status got'; }
+    else if (!seenNext) { st.textContent = 'SIGUIENTE OBJETIVO'; st.className = 'eval-status next'; seenNext = true; }
+    else { st.textContent = 'POR CONSEGUIR'; st.className = 'eval-status todo'; }
+  }
+  endpanel.style.display = 'flex';
+}
 function crashGame() {
   if (gameState !== 'flying') return;
   gameState = 'crashed';
   playCrash();
+  setMusicLevel(0.4);
   flashEl.style.transition = 'none';
   flashEl.style.opacity = '0.85';
   setTimeout(function () {
     flashEl.style.transition = 'opacity .6s';
     flashEl.style.opacity = '0';
   }, 60);
-  endTitle.textContent = '💥 Te has estrellado';
-  endText.innerHTML = 'Tiempo: <b>' + fmtTime(raceTime) + '</b> &nbsp;·&nbsp; Billetes: <b>' + billsCollected + '/' + TOTAL_BILLS + '</b>';
-  endBtn.textContent = 'Reintentar';
-  endpanel.style.display = 'flex';
+  showEval(false);
 }
 function winGame() {
   if (gameState !== 'flying') return;
   gameState = 'won';
   playWin();
-  var secs = Math.floor(raceTime);
-  var score = billsCollected * 150 + Math.max(0, 3000 - secs * 10);
-  endTitle.textContent = '🏁 ¡Misión completada!';
-  endText.innerHTML = 'Tiempo: <b>' + fmtTime(raceTime) + '</b> &nbsp;·&nbsp; Billetes: <b>' + billsCollected + '/' + TOTAL_BILLS + '</b><br>Puntuación: <b>' + score + '</b>';
-  endBtn.textContent = 'Volver a jugar';
-  endpanel.style.display = 'flex';
+  setMusicLevel(0.4);
+  showEval(true);
 }
 function resetGame() {
   pos.set(-330, 25, 0);
@@ -1281,13 +1603,37 @@ function resetGame() {
   bills.forEach(function (b) { b.taken = false; b.grp.visible = true; });
   billsCollected = 0;
   raceTime = 0;
+  impacts = 0;
+  lastScore = 0;
+  resetGrazeState();
   gameState = 'flying';
   started = true;
   endpanel.style.display = 'none';
   hudGame.style.display = 'block';
+  if (audioCtx) { if (!musicPlaying) startMusic(); else setMusicLevel(1); }
   updateGameHud();
 }
+// Volver a la portada del escenario (pantalla inicial, sin música)
+function toIdle() {
+  gameState = 'ready';
+  started = false;
+  stopMusic();
+  endpanel.style.display = 'none';
+  hudGame.style.display = 'none';
+  document.getElementById('intro').style.display = 'flex';
+  pos.set(-330, 25, 0);
+  yaw = Math.PI / 2;
+  flySpeed = 27;
+  rollVis = 0; pitchVis = 0;
+  bills.forEach(function (b) { b.taken = false; b.grp.visible = true; });
+  billsCollected = 0;
+  raceTime = 0;
+  impacts = 0;
+  lastScore = 0;
+  resetGrazeState();
+}
 endBtn.addEventListener('click', resetGame);
+endBtn2.addEventListener('click', toIdle);
 window.addEventListener('keydown', function (e) {
   if (e.code === 'KeyR' && (gameState === 'crashed' || gameState === 'won')) resetGame();
 });
@@ -1308,12 +1654,16 @@ function pollPadRetry() {
 // Interfaz de pruebas / depuración
 window.__scenarioGame = {
   getState: function () {
-    return { state: gameState, bills: billsCollected, totalBills: TOTAL_BILLS, time: raceTime, pos: { x: pos.x, y: pos.y, z: pos.z } };
+    return { state: gameState, bills: billsCollected, totalBills: TOTAL_BILLS, time: raceTime, impacts: impacts, score: lastScore, best: readBest(), musicPlaying: musicPlaying, pos: { x: pos.x, y: pos.y, z: pos.z } };
   },
   getBills: function () {
     return bills.map(function (b) { return { x: b.x, y: b.y, z: b.z, taken: b.taken }; });
   },
   totalBills: TOTAL_BILLS,
+  getScore: function () { return lastScore; },
+  getBest: function () { return readBest(); },
+  getImpacts: function () { return impacts; },
+  isMusicPlaying: function () { return musicPlaying; },
   forceWin: function () { if (gameState === 'ready') startFlight(); gameState = 'flying'; winGame(); },
   forceCrash: function () { if (gameState === 'ready') startFlight(); gameState = 'flying'; crashGame(); }
 };
@@ -1336,7 +1686,11 @@ function startFlight() {
   started = true;
   gameState = 'flying';
   raceTime = 0;
+  impacts = 0;
+  lastScore = 0;
+  resetGrazeState();
   initAudio();
+  startMusic();
   document.getElementById('intro').style.display = 'none';
   hudGame.style.display = 'block';
   updateGameHud();
