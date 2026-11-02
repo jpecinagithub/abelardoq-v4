@@ -35,6 +35,18 @@
         <p id="loading-status" role="status" aria-live="polite">Cargando el juego…</p>
       </div>
       <div id="unity-warning"> </div>
+      <style>
+        .scenario-overlay { position: absolute; top: 12px; right: 12px; z-index: 60; display: flex; gap: 8px; font-family: 'Inter', system-ui, sans-serif; }
+        .scenario-overlay a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: rgba(10, 14, 20, .72); border: 1px solid rgba(255, 196, 64, .55); color: #ffd970; font-size: 13.5px; font-weight: 600; text-decoration: none; backdrop-filter: blur(4px); transition: background .2s, transform .2s; }
+        .scenario-overlay a:hover { background: rgba(10, 14, 20, .92); transform: translateY(-1px); }
+        .scenario-overlay .tag { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: #9fb4c8; text-transform: uppercase; align-self: center; margin-right: 2px; }
+        @media (max-width: 700px) { .scenario-overlay .tag { display: none; } .scenario-overlay a { font-size: 12px; padding: 7px 10px; } }
+      </style>
+      <nav class="scenario-overlay" aria-label="Escenarios adicionales">
+        <span class="tag">Escenarios extra</span>
+        <a href="escenarios/amazonas.html" title="Escenario adicional en versión web: Selva Amazónica">🌴 Amazonas</a>
+        <a href="escenarios/los-angeles.html" title="Escenario adicional en versión web: Los Ángeles">🌆 Los Ángeles</a>
+      </nav>
       </div>
       <div id="unity-footer">
         <button id="unity-fullscreen-button" type="button" disabled><span aria-hidden="true">⛶</span> Pantalla completa</button>
