@@ -82,6 +82,16 @@
   /* ---------- Destello de choque ---------- */
   #crash-flash { position:fixed; inset:0; z-index:40; background:#d21f1f; opacity:0;
     pointer-events:none; transition:opacity .55s ease; }
+
+  /* ---------- Vidas, atropellos y follaje ---------- */
+  #gh-lives.invuln { animation: livesBlink .28s steps(2, start) infinite; }
+  @keyframes livesBlink { 50% { opacity: .2; } }
+  #hud-msg { position:absolute; top:108px; left:50%; transform:translateX(-50%); font-size:21px; font-weight:700;
+    color:#ffd9a8; text-shadow:0 2px 8px rgba(0,0,0,.9); opacity:0; transition:opacity .25s ease;
+    white-space:nowrap; pointer-events:none; }
+  #hud-msg.show { opacity:1; }
+  #hit-flash { position:fixed; inset:0; z-index:39; opacity:0; pointer-events:none; transition:opacity .5s ease;
+    background: radial-gradient(ellipse at center, rgba(255,170,40,.22) 0%, rgba(214,74,20,.5) 100%); }
 </style>
 </head>
 <body>
@@ -90,8 +100,9 @@
 <div id="hud">
   <div class="title">🌴 Selva Amazónica<small>ABELARDO Q · ESCENARIO WEB</small></div>
   <a id="back-link" href="../index.html">← Volver al juego</a>
-  <div id="game-hud"><span id="gh-bills">💵 0/20</span> · <span id="gh-time">⏱ 00:00</span> · <span id="gh-target">Objetivo a 0 m</span></div>
+  <div id="game-hud"><span id="gh-bills">💵 0/20</span> · <span id="gh-lives">❤️❤️❤️</span> · <span id="gh-time">⏱ 00:00</span> · <span id="gh-target">Objetivo a 0 m</span></div>
   <div id="target-arrow">➤</div>
+  <div id="hud-msg"></div>
   <div id="turn-warning">⚠ ¡Da la vuelta! ⚠</div>
   <div class="data">Velocidad: <b id="hud-speed">0</b> km/h<br>Altitud: <b id="hud-alt">0</b> m</div>
 </div>
@@ -101,6 +112,7 @@
     <h1>🌴 Selva Amazónica</h1>
     <p class="sub">Escenario adicional de Abelardo Q — versión web</p>
     <p class="objective">💵 Recoge los billetes a lo largo del río · ⚠ Esquiva rocas y troncos: un choque acaba la partida · 🏁 Cruza el anillo dorado junto a la cascada para completar la misión</p>
+    <p class="objective">🦜 Evita los guacamayos: atropellar uno te cuesta una vida (tienes 3 ❤️); si te quedas sin vidas, se acaba la partida<br>🌿 Puedes atravesar las copas de los árboles: escucharás el crujido del follaje</p>
     <div class="controls">
       <h2>Teclado</h2>
       <ul>
@@ -129,6 +141,7 @@
 </div>
 
 <div id="crash-flash"></div>
+<div id="hit-flash"></div>
 
 <div id="gamepad-pill">🎮 Mando conectado</div>
 
@@ -392,6 +405,10 @@ var fallTex, foamPts, foamBase;
 })();
 // ---------- Vegetación (instanciada) ----------
 var branchSpots = [];   // puntos de rama para monos (del árbol con lianas)
+var canopySpheres = []; // esferas de copa cercanas al río (crujido de follaje al atravesarlas)
+function registerCanopy(x, y, z, r) {
+  if (Math.abs(x - riverX(z)) < 45) canopySpheres.push({ center: new THREE.Vector3(x, y, z), radius: r });
+}
 function groundPos(minRiverDist, tries) {
   for (var t = 0; t < (tries || 30); t++) {
     var x = rand(-HALF + 12, HALF - 12), z = rand(-HALF + 12, HALF - 12);
@@ -470,10 +487,12 @@ var treeCounts = { round: 0, palm: 0, liana: 0 };
 treeCounts.round = fillInstances(new THREE.InstancedMesh(geoTreeRound(), leafMat, 620), 620, function (mesh, i) {
   var p = groundPos(3); if (!p) return false;
   var s = rand(0.8, 1.5);
+  var sy = s * rand(0.9, 1.25);
   dummy.position.set(p.x, p.h - 0.3, p.z);
   dummy.rotation.set(0, rand(0, 6.28), 0);
-  dummy.scale.set(s, s * rand(0.9, 1.25), s);
+  dummy.scale.set(s, sy, s);
   dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
+  registerCanopy(p.x, p.h - 0.3 + 9.6 * sy, p.z, 3.6 * s);
   return true;
 });
 treeCounts.palm = fillInstances(new THREE.InstancedMesh(geoPalm(), leafMat, 470), 470, function (mesh, i) {
@@ -483,6 +502,7 @@ treeCounts.palm = fillInstances(new THREE.InstancedMesh(geoPalm(), leafMat, 470)
   dummy.rotation.set(rand(-0.04, 0.04), rand(0, 6.28), rand(-0.04, 0.04));
   dummy.scale.set(s, s, s);
   dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
+  registerCanopy(p.x, p.h - 0.25 + 8.3 * s, p.z, 2.3 * s);
   return true;
 });
 treeCounts.liana = fillInstances(new THREE.InstancedMesh(geoTreeLianas(), leafMat, 520), 520, function (mesh, i) {
@@ -492,6 +512,7 @@ treeCounts.liana = fillInstances(new THREE.InstancedMesh(geoTreeLianas(), leafMa
   dummy.rotation.set(0, rand(0, 6.28), 0);
   dummy.scale.set(s, s, s);
   dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
+  registerCanopy(p.x, p.h - 0.3 + 11.6 * s, p.z, 4.8 * s);
   if (branchSpots.length < 10 && Math.random() < 0.25) {
     branchSpots.push({ x: p.x + rand(-2, 2), y: p.h + 10.6 * s, z: p.z + rand(-2, 2) });
   }
@@ -614,9 +635,9 @@ function makeBird(bodyColor, wingColor) {
     { body: 0xffb020, wing: 0x2a9d4f }    // loro dorado / alas verdes
   ];
   var centers = [
-    { x: -95, y: 34, z: -70, r: 52 },
-    { x: 85, y: 40, z: 55, r: 60 },
-    { x: -35, y: 30, z: 150, r: 44 }
+    { x: riverX(120), y: 14, z: 120, r: 30 },
+    { x: riverX(-40), y: 16, z: -40, r: 34 },
+    { x: riverX(-180), y: 12, z: -180, r: 28 }
   ];
   for (var f = 0; f < centers.length; f++) {
     var c = centers[f], sp = species[f];
@@ -625,12 +646,28 @@ function makeBird(bodyColor, wingColor) {
       b.scale.setScalar(rand(0.85, 1.2));
       scene.add(b);
       birds.push({
-        obj: b, cx: c.x, cz: c.z, cy: c.y + rand(-3.5, 3.5),
-        r: c.r + rand(-9, 9), ang: (i / 9) * Math.PI * 2 + rand(-0.2, 0.2),
+        obj: b, cx: c.x, cz: c.z, cy: c.y + rand(-2, 2),
+        r: c.r + rand(-6, 6), ang: (i / 9) * Math.PI * 2 + rand(-0.2, 0.2),
         speed: rand(0.05, 0.085) * (f % 2 ? 1 : -1),
-        flap: rand(7, 10), phase: rand(0, 6.28)
+        flap: rand(7, 10), phase: rand(0, 6.28),
+        colBody: sp.body, colWing: sp.wing
       });
     }
+  }
+  // Bandada patrulla: recorre el río ida y vuelta a baja altura (~12 m)
+  for (var pi = 0; pi < 5; pi++) {
+    var psp = species[pi % species.length];
+    var pb = makeBird(psp.body, psp.wing);
+    pb.scale.setScalar(rand(0.9, 1.15));
+    scene.add(pb);
+    birds.push({
+      obj: pb, patrol: true,
+      z: 235 - pi * 42, dir: -1, speedZ: rand(9, 12),
+      latPhase: rand(0, 6.28), latAmp: rand(7, 12),
+      hBase: 12 + rand(-1.5, 1.5),
+      flap: rand(7, 10), phase: rand(0, 6.28),
+      colBody: psp.body, colWing: psp.wing
+    });
   }
 })();
 
@@ -818,9 +855,15 @@ var grng = mulberry32(20261102);
 function grand(a, b) { return a + grng() * (b - a); }
 
 var TOTAL_BILLS = 20;
-var gameState = 'idle';           // idle | playing | crashed | won
+var gameState = 'idle';           // idle | playing | crashed | won | gameover
 var gameTime = 0;
 var billCount = 0;
+var lives = 3;                    // vidas (corazones) de la partida
+var birdHits = 0;                 // pájaros atropellados en la partida
+var invulnT = 0;                  // segundos de invulnerabilidad restantes tras un atropello
+var canopyCool = 0, wasInCanopy = false;  // crujido de follaje: cooldown y estado de copa
+var fxParticles = [];             // partículas sueltas (plumas y hojas)
+var _wv = new THREE.Vector3();    // vector temporal reutilizable (posiciones mundiales)
 var bills = [];                   // {group, pos, baseY, phase, collected}
 var obstacles = [];               // {center: Vector3, radius} — esferas de colisión
 var ringPos = new THREE.Vector3();
@@ -1031,6 +1074,111 @@ function playCrash() {
     src.start();
   } catch (e) { /* sin sonido, sin error */ }
 }
+function playSoftCrash() {
+  if (!audioCtx) return;
+  tone(75, 32, 0.5, 'sine', 0.2, 0);
+  try {
+    var len = Math.floor(audioCtx.sampleRate * 0.18);
+    var buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len) * 0.6;
+    var src = audioCtx.createBufferSource(); src.buffer = buf;
+    var g = audioCtx.createGain(); g.gain.value = 0.12;
+    src.connect(g); g.connect(audioCtx.destination);
+    src.start();
+  } catch (e) { /* sin sonido, sin error */ }
+}
+// Graznido de guacamayo: chirp descendente con vibrato
+function playSquawk() {
+  if (!audioCtx) return;
+  try {
+    var t0 = audioCtx.currentTime, dur = 0.25;
+    var o = audioCtx.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(1400, t0);
+    o.frequency.exponentialRampToValueAtTime(700, t0 + dur);
+    var lfo = audioCtx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 55;
+    var lg = audioCtx.createGain(); lg.gain.value = 180;
+    lfo.connect(lg); lg.connect(o.frequency);
+    var f = audioCtx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1200; f.Q.value = 1.1;
+    var g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(f); f.connect(g); g.connect(audioCtx.destination);
+    o.start(t0); lfo.start(t0);
+    o.stop(t0 + dur + 0.05); lfo.stop(t0 + dur + 0.05);
+  } catch (e) { /* sin sonido, sin error */ }
+}
+// Crujido de follaje al atravesar una copa: ruido blanco por bandpass con barrido
+var noiseBuf = null;
+function playRustle() {
+  if (!audioCtx) return;
+  try {
+    var sr = audioCtx.sampleRate;
+    if (!noiseBuf) {
+      noiseBuf = audioCtx.createBuffer(1, Math.floor(sr * 0.7), sr);
+      var nd = noiseBuf.getChannelData(0);
+      for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    }
+    var t0 = audioCtx.currentTime;
+    var src = audioCtx.createBufferSource(); src.buffer = noiseBuf;
+    src.playbackRate.value = rand(0.9, 1.15);
+    var bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.9;
+    bp.frequency.setValueAtTime(4500, t0);
+    bp.frequency.exponentialRampToValueAtTime(1800, t0 + 0.55);
+    var g = audioCtx.createGain();
+    var vol = 0.10 + 0.34 * clamp(plane.curSpeed / 33, 0, 1);   // volumen según velocidad
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.62);
+    src.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
+    src.start(t0); src.stop(t0 + 0.72);
+  } catch (e) { /* sin sonido, sin error */ }
+}
+
+// --- Partículas sueltas: plumas (atropello) y hojas (cruzar copas) ---
+var featherGeo = new THREE.PlaneGeometry(0.3, 0.16);
+var leafGeoFx = new THREE.PlaneGeometry(0.36, 0.24);
+var fxMatCache = {};
+function fxMaterial(color) {
+  if (!fxMatCache[color]) fxMatCache[color] = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+  return fxMatCache[color];
+}
+function spawnBurst(pos, colors, n, spread, up, gravity, life, geo) {
+  for (var i = 0; i < n; i++) {
+    var m = new THREE.Mesh(geo, fxMaterial(colors[i % colors.length]));
+    m.position.copy(pos);
+    m.rotation.set(rand(0, 3.14), rand(0, 3.14), rand(0, 3.14));
+    scene.add(m);
+    fxParticles.push({
+      mesh: m,
+      vel: new THREE.Vector3(rand(-spread, spread), rand(0.2, up), rand(-spread, spread)),
+      spin: new THREE.Vector3(rand(-9, 9), rand(-9, 9), rand(-9, 9)),
+      life: life * rand(0.75, 1.1), gravity: gravity
+    });
+  }
+}
+function spawnFeathers(pos, c1, c2) { spawnBurst(pos, [c1, c2, 0xffffff], 12, 2.6, 1.8, -3.2, 0.8, featherGeo); }
+function spawnLeaves(pos) {
+  var p = pos.clone(); p.x += rand(-0.6, 0.6); p.z += rand(-0.6, 0.6);
+  spawnBurst(p, [0x3f8a34, 0x5da244, 0x2f7029, 0x77b255], 10, 1.3, 0.5, -1.3, 1.0, leafGeoFx);
+}
+function updateFx(dt) {
+  for (var i = fxParticles.length - 1; i >= 0; i--) {
+    var f = fxParticles[i];
+    f.life -= dt;
+    if (f.life <= 0) { scene.remove(f.mesh); fxParticles.splice(i, 1); continue; }
+    f.vel.y += f.gravity * dt;
+    f.mesh.position.addScaledVector(f.vel, dt);
+    f.mesh.rotation.x += f.spin.x * dt;
+    f.mesh.rotation.y += f.spin.y * dt;
+    f.mesh.rotation.z += f.spin.z * dt;
+  }
+}
+function clearFx() {
+  for (var i = 0; i < fxParticles.length; i++) scene.remove(fxParticles[i].mesh);
+  fxParticles.length = 0;
+}
 
 // --- Estados de partida, paneles y HUD de juego ---
 var ghBills = document.getElementById('gh-bills');
@@ -1042,6 +1190,17 @@ var resultTitle = document.getElementById('result-title');
 var resultStats = document.getElementById('result-stats');
 var retryBtn = document.getElementById('btn-retry');
 var crashFlash = document.getElementById('crash-flash');
+var ghLives = document.getElementById('gh-lives');
+var hudMsg = document.getElementById('hud-msg');
+var hitFlash = document.getElementById('hit-flash');
+var hudMsgTimer = null;
+function livesStr() { var s = ''; for (var i = 0; i < 3; i++) s += (i < lives ? '❤️' : '🖤'); return s; }
+function showHudMsg(text) {
+  hudMsg.textContent = text;
+  hudMsg.classList.add('show');
+  if (hudMsgTimer) clearTimeout(hudMsgTimer);
+  hudMsgTimer = setTimeout(function () { hudMsg.classList.remove('show'); }, 1500);
+}
 
 function fmtTime(s) {
   s = Math.max(0, Math.floor(s));
@@ -1057,6 +1216,7 @@ function updateGameHud() {
   var tg = currentTarget();
   var dist = Math.round(plane.pos.distanceTo(tg.pos));
   ghBills.textContent = '💵 ' + billCount + '/' + TOTAL_BILLS;
+  ghLives.textContent = livesStr();
   ghTime.textContent = '⏱ ' + fmtTime(gameTime);
   ghTarget.textContent = tg.ring ? ('🏁 Meta a ' + dist + ' m') : ('Objetivo a ' + dist + ' m');
   var targetYaw = Math.atan2(-(tg.pos.x - plane.pos.x), -(tg.pos.z - plane.pos.z));
@@ -1071,7 +1231,7 @@ function doCrash() {
   setTimeout(function () { crashFlash.style.opacity = '0'; }, 130);
   document.getElementById('turn-warning').style.display = 'none';
   resultTitle.textContent = '💥 Te has estrellado';
-  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b>';
+  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b><br>🦜 Pájaros atropellados: <b>' + birdHits + '</b>';
   retryBtn.textContent = 'Reintentar';
   resultPanel.style.display = 'flex';
 }
@@ -1081,8 +1241,33 @@ function doWin() {
   playWin();
   document.getElementById('turn-warning').style.display = 'none';
   resultTitle.textContent = '🏁 ¡Misión completada!';
-  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b><br>🏆 Puntuación: <b>' + currentScore() + '</b>';
+  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b><br>🦜 Pájaros atropellados: <b>' + birdHits + '</b><br>🏆 Puntuación: <b>' + currentScore() + '</b>';
   retryBtn.textContent = 'Volver a jugar';
+  resultPanel.style.display = 'flex';
+}
+// Atropello de un guacamayo: −1 vida, plumas, graznido e invulnerabilidad breve
+function doBirdHit(bird, wpos) {
+  if (gameState !== 'playing' || invulnT > 0) return;
+  lives--; birdHits++;
+  var fp = wpos ? wpos.clone() : (bird ? bird.obj.position.clone() : plane.pos.clone());
+  spawnFeathers(fp, bird ? bird.colBody : 0xe63b2e, bird ? bird.colWing : 0x2a6fd4);
+  playSquawk();
+  hitFlash.style.opacity = '0.85';
+  setTimeout(function () { hitFlash.style.opacity = '0'; }, 120);
+  invulnT = 2.5;
+  showHudMsg('−1 ❤️ ¡Pájaro atropellado!');
+  updateGameHud();
+  if (lives <= 0) { doGameOver(); return; }
+}
+// Fin de partida por quedarse sin vidas
+function doGameOver() {
+  if (gameState !== 'playing') return;
+  gameState = 'gameover'; flying = false;
+  playSoftCrash();
+  document.getElementById('turn-warning').style.display = 'none';
+  resultTitle.textContent = '💔 Sin vidas';
+  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b><br>🦜 Pájaros atropellados: <b>' + birdHits + '</b>';
+  retryBtn.textContent = 'Reintentar';
   resultPanel.style.display = 'flex';
 }
 function beginRun() {
@@ -1091,6 +1276,11 @@ function beginRun() {
   plane.speed = 17; plane.curSpeed = 17; plane.bank = 0; plane.pitchVis = 0;
   for (var i = 0; i < bills.length; i++) { bills[i].collected = false; bills[i].group.visible = true; }
   billCount = 0; gameTime = 0; gameState = 'playing'; flying = true;
+  lives = 3; birdHits = 0; invulnT = 0; canopyCool = 0; wasInCanopy = false;
+  clearFx();
+  hudMsg.classList.remove('show');
+  ghLives.classList.remove('invuln');
+  hitFlash.style.opacity = '0';
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('hud').style.display = 'block';
   document.getElementById('turn-warning').style.display = 'none';
@@ -1101,13 +1291,16 @@ function beginRun() {
 }
 retryBtn.addEventListener('click', function () { startFlight(); });
 window.addEventListener('keydown', function (e) {
-  if (e.code === 'KeyR' && (gameState === 'crashed' || gameState === 'won')) startFlight();
+  if (e.code === 'KeyR' && (gameState === 'crashed' || gameState === 'won' || gameState === 'gameover')) startFlight();
 });
 
 // Lógica por frame durante la partida (la llama updateFlight)
 var ghClock = 0;
 function updateGameLogic(dt) {
   gameTime += dt;
+  if (invulnT > 0) invulnT = Math.max(0, invulnT - dt);
+  ghLives.classList.toggle('invuln', invulnT > 0);
+  if (canopyCool > 0) canopyCool -= dt;
   for (var i = 0; i < bills.length; i++) {
     var b = bills[i];
     if (!b.collected && plane.pos.distanceTo(b.pos) < 6) {
@@ -1116,11 +1309,29 @@ function updateGameLogic(dt) {
       updateGameHud();
     }
   }
+  // Guacamayos: atropello si el avión toca el cuerpo de un pájaro
+  for (var bi = 0; bi < birds.length; bi++) {
+    birds[bi].obj.getWorldPosition(_wv);
+    if (plane.pos.distanceToSquared(_wv) < 5.29) { doBirdHit(birds[bi], _wv); break; }  // 2,3²
+  }
+  if (gameState !== 'playing') return;   // el atropello pudo acabar la partida (sin vidas)
   for (var j = 0; j < obstacles.length; j++) {
     var o = obstacles[j];
     if (plane.pos.distanceToSquared(o.center) < o.radius * o.radius) { doCrash(); return; }
   }
   if (plane.pos.distanceTo(ringPos) < 10) { doWin(); return; }
+  // Copas de árbol: crujido de follaje y hojas al entrar en una copa cercana al río
+  var inCan = false;
+  for (var ci = 0; ci < canopySpheres.length; ci++) {
+    var cs = canopySpheres[ci];
+    if (plane.pos.distanceToSquared(cs.center) < cs.radius * cs.radius) { inCan = true; break; }
+  }
+  if (inCan && !wasInCanopy && canopyCool <= 0) {
+    playRustle();
+    spawnLeaves(plane.pos);
+    canopyCool = 0.35;
+  }
+  wasInCanopy = inCan;
   ghClock += dt;
   if (ghClock > 0.1) { ghClock = 0; updateGameHud(); }
 }
@@ -1145,13 +1356,23 @@ function updateGameVisual(t) {
 window.__scenarioGame = {
   totalBills: TOTAL_BILLS,
   getState: function () {
-    return { state: gameState, bills: billCount, totalBills: TOTAL_BILLS, time: gameTime, score: currentScore() };
+    return { state: gameState, bills: billCount, totalBills: TOTAL_BILLS, time: gameTime, score: currentScore(), lives: lives, birdHits: birdHits };
   },
   getBills: function () {
     return bills.map(function (b) { return { x: b.pos.x, y: b.pos.y, z: b.pos.z, collected: b.collected }; });
   },
+  getLives: function () { return lives; },
+  getBirdHits: function () { return birdHits; },
   forceWin: function () { if (gameState === 'idle') beginRun(); doWin(); },
-  forceCrash: function () { if (gameState === 'idle') beginRun(); doCrash(); }
+  forceCrash: function () { if (gameState === 'idle') beginRun(); doCrash(); },
+  // Simula un atropello respetando estado e invulnerabilidad; devuelve las vidas restantes
+  forceBirdHit: function () {
+    if (gameState === 'idle') beginRun();
+    if (gameState === 'playing') doBirdHit(null, null);
+    return lives;
+  },
+  // Gancho de pruebas: pone a cero la invulnerabilidad sin esperar los 2,5 s
+  clearInvulnerability: function () { invulnT = 0; if (ghLives) ghLives.classList.remove('invuln'); }
 };
 
 // ---------- Vuelo y controles ----------
@@ -1224,7 +1445,7 @@ function updateFlight(dt, t) {
   prevBtn0 = btn0Now;
   if (!flying) {
     if (gameState === 'idle' && gp && gp.anyButton) startFlight();
-    else if ((gameState === 'crashed' || gameState === 'won') && btn0Edge) startFlight();
+    else if ((gameState === 'crashed' || gameState === 'won' || gameState === 'gameover') && btn0Edge) startFlight();
     // Cámara en espera: balanceo suave sobre el río
     camera.position.set(plane.pos.x, plane.pos.y + Math.sin(t * 0.6) * 0.35, plane.pos.z);
     camera.rotation.order = 'YXZ';
@@ -1315,17 +1536,30 @@ function updateNature(dt, t) {
   }
   for (var b = 0; b < birds.length; b++) {
     var bd = birds[b];
-    bd.ang += bd.speed * dt;
-    var bx = bd.cx + Math.cos(bd.ang) * bd.r;
-    var bz = bd.cz + Math.sin(bd.ang) * bd.r;
-    var by = bd.cy + Math.sin(t * 0.9 + bd.phase) * 1.3;
-    bd.obj.position.set(bx, by, bz);
-    bd.obj.rotation.y = -bd.ang + (bd.speed > 0 ? 0 : Math.PI);
+    if (bd.patrol) {
+      // Patrulla fluvial: ida y vuelta a lo largo del río, con desplazamiento lateral senoidal
+      bd.z += bd.dir * bd.speedZ * dt;
+      if (bd.z < -245) { bd.z = -245; bd.dir = 1; }
+      if (bd.z > 245) { bd.z = 245; bd.dir = -1; }
+      var ppx = riverX(bd.z) + Math.sin(t * 0.55 + bd.latPhase) * bd.latAmp;
+      var ppy = bd.hBase + Math.sin(t * 1.15 + bd.phase) * 1.1;
+      var pvx = ppx - bd.obj.position.x, pvz = bd.z - bd.obj.position.z;
+      bd.obj.position.set(ppx, ppy, bd.z);
+      if (pvx * pvx + pvz * pvz > 1e-8) bd.obj.rotation.y = Math.atan2(-pvx, -pvz);
+    } else {
+      bd.ang += bd.speed * dt;
+      var bx = bd.cx + Math.cos(bd.ang) * bd.r;
+      var bz = bd.cz + Math.sin(bd.ang) * bd.r;
+      var by = bd.cy + Math.sin(t * 0.9 + bd.phase) * 1.3;
+      bd.obj.position.set(bx, by, bz);
+      bd.obj.rotation.y = -bd.ang + (bd.speed > 0 ? 0 : Math.PI);
+    }
     var flap = Math.sin(t * bd.flap + bd.phase) * 0.65;
     bd.obj.userData.wings[0].rotation.z = flap;
     bd.obj.userData.wings[1].rotation.z = -flap;
     bd.obj.rotation.z = Math.sin(t * 0.9 + bd.phase) * 0.08;
   }
+  updateFx(dt);
   if (toucanHead) {
     toucanHead.rotation.x = Math.sin(t * 1.6) * 0.16 - 0.04;
     toucanHead.rotation.y = Math.sin(t * 0.65) * 0.35;
