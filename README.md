@@ -16,7 +16,7 @@ Este repositorio contiene la **build WebGL completa y desplegable** tal y como s
 | `Build/` | El juego compilado: loader JS, framework JS, WASM y datos (`.unityweb`, comprimidos en Brotli) |
 | `TemplateData/` | Recursos de la plantilla de Unity (CSS, favicon, barra de carga) |
 | `presentation/` | Capa de presentación propia: CSS, logo, imagen de fondo y la capa de mando |
-| `escenarios/` | Escenarios adicionales en versión web (Three.js, autocontenidos): `amazonas.html` (selva amazónica) y `los-angeles.html` (ciudad de Los Ángeles). No son niveles del juego Unity: son páginas web enlazadas desde la página principal, con el mismo esquema de vuelo (teclado y mando) |
+| `escenarios/` | Escenarios adicionales en versión web (Three.js, autocontenidos): `amazonas.html` (selva amazónica) y `los-angeles.html` (ciudad de Los Ángeles). No son niveles del juego Unity: son páginas web enlazadas desde la página principal, con el mismo esquema de vuelo (teclado y mando) y partida completa en cada uno: 20 billetes recogibles, obstáculos con choque que acaban la partida, anillo dorado final, cronómetro y puntuación |
 | `vercel.json` | Cabeceras para servir la build en Vercel (ver «Despliegue») |
 
 Peso total: ~91 MB. El fichero grande es `Build/*.data.unityweb` (83,5 MB en Brotli; 112,7 MB descomprimido).

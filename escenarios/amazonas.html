@@ -51,6 +51,37 @@
     padding:8px 18px; border-radius:999px; opacity:0; transition:all .35s ease; max-width:88vw;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; }
   #gamepad-pill.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- Objetivo en la pantalla inicial ---------- */
+  .objective { background:rgba(46,120,60,.25); border:1px solid rgba(120,220,150,.35); border-radius:10px;
+    padding:10px 14px; font-size:14px; line-height:1.55; color:#dfffe8; margin:0 auto 4px; max-width:480px; }
+
+  /* ---------- HUD de partida ---------- */
+  #game-hud { position:absolute; top:14px; left:50%; transform:translateX(-50%); font-size:16.5px; font-weight:600;
+    color:#eaf5ec; background:rgba(8,30,16,.55); border:1px solid rgba(120,220,150,.3); border-radius:999px;
+    padding:7px 18px; white-space:nowrap; font-variant-numeric:tabular-nums; text-shadow:0 1px 4px rgba(0,0,0,.7); }
+  #target-arrow { position:absolute; top:60px; left:50%; margin-left:-17px; width:34px; height:34px;
+    font-size:30px; line-height:34px; text-align:center; color:#ffd970; text-shadow:0 2px 8px rgba(0,0,0,.85);
+    transition:transform .12s linear; }
+
+  /* ---------- Panel de resultado (choque / victoria) ---------- */
+  #result-panel { position:fixed; inset:0; z-index:25; display:none; align-items:center; justify-content:center;
+    background: radial-gradient(ellipse at center, rgba(8,30,16,.45) 0%, rgba(4,18,9,.8) 100%); }
+  #result-card { max-width:520px; width:92%; text-align:center; padding:32px 38px 28px;
+    background:rgba(10,32,18,.88); border:1px solid rgba(120,220,150,.35); border-radius:16px;
+    box-shadow:0 18px 60px rgba(0,0,0,.55); }
+  #result-card h1 { margin:0 0 12px; font-size:34px; color:#b9f4c6; text-shadow:0 2px 14px rgba(46,160,80,.45); }
+  #result-stats { margin:0 0 22px; font-size:17px; line-height:1.6; color:#eaf5ec; }
+  #result-stats b { color:#8bf0a4; font-variant-numeric:tabular-nums; }
+  #btn-retry { font-size:18px; font-weight:700; letter-spacing:.5px; color:#06280f; cursor:pointer;
+    background:linear-gradient(180deg,#8bf0a4,#43c465); border:none; border-radius:999px; padding:12px 46px;
+    box-shadow:0 6px 22px rgba(60,200,100,.45); transition:transform .12s ease, box-shadow .12s ease; }
+  #btn-retry:hover { transform:translateY(-2px) scale(1.03); box-shadow:0 10px 28px rgba(60,200,100,.6); }
+  #btn-retry:active { transform:scale(.98); }
+
+  /* ---------- Destello de choque ---------- */
+  #crash-flash { position:fixed; inset:0; z-index:40; background:#d21f1f; opacity:0;
+    pointer-events:none; transition:opacity .55s ease; }
 </style>
 </head>
 <body>
@@ -59,6 +90,8 @@
 <div id="hud">
   <div class="title">🌴 Selva Amazónica<small>ABELARDO Q · ESCENARIO WEB</small></div>
   <a id="back-link" href="../index.html">← Volver al juego</a>
+  <div id="game-hud"><span id="gh-bills">💵 0/20</span> · <span id="gh-time">⏱ 00:00</span> · <span id="gh-target">Objetivo a 0 m</span></div>
+  <div id="target-arrow">➤</div>
   <div id="turn-warning">⚠ ¡Da la vuelta! ⚠</div>
   <div class="data">Velocidad: <b id="hud-speed">0</b> km/h<br>Altitud: <b id="hud-alt">0</b> m</div>
 </div>
@@ -67,6 +100,7 @@
   <div id="start-card">
     <h1>🌴 Selva Amazónica</h1>
     <p class="sub">Escenario adicional de Abelardo Q — versión web</p>
+    <p class="objective">💵 Recoge los billetes a lo largo del río · ⚠ Esquiva rocas y troncos: un choque acaba la partida · 🏁 Cruza el anillo dorado junto a la cascada para completar la misión</p>
     <div class="controls">
       <h2>Teclado</h2>
       <ul>
@@ -84,6 +118,17 @@
     <p class="hint">Pulsa «Volar» o la tecla Enter para despegar · Sobrevuela el río, saluda a los guacamayos, los tucanes, los monos y los caimanes.</p>
   </div>
 </div>
+
+<div id="result-panel">
+  <div id="result-card">
+    <h1 id="result-title">💥 Te has estrellado</h1>
+    <p id="result-stats"></p>
+    <button id="btn-retry">Reintentar</button>
+    <p class="hint">También con la tecla R o el botón ✕ (Cross) del mando</p>
+  </div>
+</div>
+
+<div id="crash-flash"></div>
 
 <div id="gamepad-pill">🎮 Mando conectado</div>
 
@@ -759,6 +804,356 @@ caimans.push(makeCaiman(-3.5, 150), makeCaiman(2.5, 10), makeCaiman(-1, -140));
     frogs.push({ obj: g, x: x, y: y, z: z, wait: rand(1.5, 7), hopT: -1, dir: rand(0, 6.28) });
   }
 })();
+// ---------- CAPA DE JUEGO: billetes, obstáculos y meta ----------
+// Disposición con semilla fija: la partida es igual en cada carga.
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+var grng = mulberry32(20261102);
+function grand(a, b) { return a + grng() * (b - a); }
+
+var TOTAL_BILLS = 20;
+var gameState = 'idle';           // idle | playing | crashed | won
+var gameTime = 0;
+var billCount = 0;
+var bills = [];                   // {group, pos, baseY, phase, collected}
+var obstacles = [];               // {center: Vector3, radius} — esferas de colisión
+var ringPos = new THREE.Vector3();
+var ringMesh = null, ringBeam = null, ringGlow = null;
+var prevBtn0 = false;
+
+function makeGlowTexture() {
+  var cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  var x = cv.getContext('2d');
+  var g = x.createRadialGradient(64, 64, 2, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,255,255,.9)');
+  g.addColorStop(0.35, 'rgba(255,255,255,.35)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(cv);
+}
+var glowTex = makeGlowTexture();
+
+// --- Billetes recogibles a lo largo del río (orden de ruta: de la salida a la cascada) ---
+function makeBillTexture() {
+  var cv = document.createElement('canvas'); cv.width = 256; cv.height = 128;
+  var x = cv.getContext('2d');
+  var gr = x.createLinearGradient(0, 0, 0, 128);
+  gr.addColorStop(0, '#3f9e4d'); gr.addColorStop(1, '#2a7a38');
+  x.fillStyle = gr; x.fillRect(0, 0, 256, 128);
+  x.strokeStyle = '#e8f5d8'; x.lineWidth = 6; x.strokeRect(6, 6, 244, 116);
+  x.strokeStyle = 'rgba(232,245,216,.55)'; x.lineWidth = 2; x.strokeRect(16, 16, 224, 96);
+  x.beginPath(); x.ellipse(128, 64, 27, 33, 0, 0, 7);
+  x.strokeStyle = 'rgba(234,247,220,.5)'; x.lineWidth = 2; x.stroke();
+  x.fillStyle = '#eaf7dc'; x.textBaseline = 'middle';
+  x.font = 'bold 70px Georgia, serif'; x.textAlign = 'center';
+  x.fillText('$', 128, 68);
+  x.font = 'bold 25px Georgia, serif';
+  x.textAlign = 'left'; x.fillText('100', 24, 30); x.fillText('100', 24, 100);
+  x.textAlign = 'right'; x.fillText('100', 232, 30); x.fillText('100', 232, 100);
+  return new THREE.CanvasTexture(cv);
+}
+(function buildBills() {
+  var tex = makeBillTexture();
+  var mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+  var geo = new THREE.PlaneGeometry(2.2, 1.1);
+  for (var i = 0; i < TOTAL_BILLS; i++) {
+    var z = 232 - i * (470 / (TOTAL_BILLS - 1));
+    var bx = riverX(z) + grand(-4, 4);
+    var by = WATER_Y + 4 + grng() * 14;         // entre 4 y 18 m sobre el agua
+    var g = new THREE.Group();
+    g.add(new THREE.Mesh(geo, mat));
+    var halo = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: glowTex, color: 0xaef2a0, transparent: true, opacity: 0.75,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    halo.scale.set(8, 8, 1);
+    halo.position.z = -0.15;
+    g.add(halo);
+    g.position.set(bx, by, z);
+    scene.add(g);
+    bills.push({ group: g, pos: new THREE.Vector3(bx, by, z), baseY: by, phase: grand(0, 6.28), collected: false });
+  }
+})();
+
+// --- Rocas en el río y las orillas (obstáculos con choque) ---
+function deformedRock(r) {
+  var g = new THREE.IcosahedronGeometry(r, 1);
+  var pa = g.attributes.position;
+  var v = new THREE.Vector3();
+  for (var i = 0; i < pa.count; i++) {
+    v.fromBufferAttribute(pa, i);
+    // Hash por posición: los vértices compartidos se deforman igual (sin grietas)
+    var h = Math.sin(v.x * 12.9898 + v.y * 78.233 + v.z * 37.719) * 43758.5453;
+    var s = 1 + (h - Math.floor(h) - 0.5) * 0.5;
+    pa.setXYZ(i, v.x * s, v.y * s * 0.82, v.z * s);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+(function buildRocks() {
+  var mats = [0x74797a, 0x62686a, 0x84898a].map(function (c) { return new THREE.MeshLambertMaterial({ color: c }); });
+  for (var i = 0; i < 22; i++) {
+    var z = 226 - i * (478 / 21) + grand(-5, 5);
+    var hw = riverHalfWidth(z);
+    var off = grng() < 0.72 ? grand(-hw + 1.5, hw - 1.5) : (hw + grand(1, 4)) * (grng() < 0.5 ? -1 : 1);
+    var x = riverX(z) + off;
+    var r = grand(2.2, 4.2);
+    var grp = new THREE.Group();
+    var main = new THREE.Mesh(deformedRock(r), mats[i % 3]);
+    main.position.y = r * 0.3;
+    grp.add(main);
+    var nSat = 1 + Math.floor(grng() * 2);
+    for (var s2 = 0; s2 < nSat; s2++) {
+      var sr = r * grand(0.35, 0.5);
+      var sat = new THREE.Mesh(deformedRock(sr), mats[(i + 1) % 3]);
+      sat.position.set(grand(-0.7, 0.7) * r, sr * 0.25, grand(-0.7, 0.7) * r);
+      grp.add(sat);
+    }
+    grp.position.set(x, WATER_Y - 0.5, z);
+    grp.rotation.y = grand(0, 6.28);
+    scene.add(grp);
+    obstacles.push({ center: new THREE.Vector3(x, WATER_Y + r * 0.35, z), radius: r * 1.05 });
+  }
+})();
+
+// --- Troncos caídos cruzando el río (obstáculos a 3–7 m de altura) ---
+(function buildLogs() {
+  var heights = [4.2, 6.1, 3.4, 6.8, 4.6, 3.2, 5.6];
+  var barkMat = new THREE.MeshLambertMaterial({ color: 0x6e4f30 });
+  var barkMat2 = new THREE.MeshLambertMaterial({ color: 0x7d5c39 });
+  var endMat = new THREE.MeshLambertMaterial({ color: 0xb08d57 });
+  var mossMat = new THREE.MeshLambertMaterial({ color: 0x4c8a3d });
+  for (var i = 0; i < 7; i++) {
+    var z = 210 - i * (425 / 6) + grand(-4, 4);
+    var hw = riverHalfWidth(z);
+    var len = hw * 2 + 9;
+    var y = heights[i];
+    var cx = riverX(z);
+    var grp = new THREE.Group();
+    var cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.6, len, 9), [barkMat, endMat, endMat]);
+    cyl.rotation.z = Math.PI / 2;
+    grp.add(cyl);
+    var br = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 2.4, 6), barkMat2);
+    br.position.set(grand(-len / 4, len / 4), 0.7, 0.2);
+    br.rotation.z = grand(0.5, 1.0);
+    grp.add(br);
+    for (var mm = 0; mm < 4; mm++) {
+      var mo = new THREE.Mesh(new THREE.SphereGeometry(grand(0.4, 0.8), 6, 5), mossMat);
+      mo.scale.y = 0.35;
+      mo.position.set(grand(-len / 2 + 1, len / 2 - 1), 0.55, grand(-0.3, 0.3));
+      grp.add(mo);
+    }
+    var deriv = (riverX(z + 2) - riverX(z - 2)) / 4;
+    var th = Math.atan(deriv);               // tronco perpendicular a la corriente
+    grp.position.set(cx, y, z);
+    grp.rotation.y = th;
+    scene.add(grp);
+    // Esferas de colisión a lo largo del tronco
+    var dir = new THREE.Vector3(Math.cos(th), 0, -Math.sin(th));
+    var steps = Math.max(2, Math.floor(len / 2.1));
+    for (var k = 0; k <= steps; k++) {
+      var off = -len / 2 + (k / steps) * len;
+      obstacles.push({ center: new THREE.Vector3(cx + dir.x * off, y, z + dir.z * off), radius: 1.15 });
+    }
+  }
+})();
+
+// --- Meta: anillo dorado frente a la cascada, con haz de luz ---
+(function buildGoal() {
+  var rz = (-HALF + 14) + 13;                // 13 m por delante de la cascada
+  var rx = riverX(rz);
+  ringPos.set(rx, 12.5, rz);                 // ~12 m sobre el agua
+  ringMesh = new THREE.Mesh(
+    new THREE.TorusGeometry(9, 0.6, 12, 40),
+    new THREE.MeshBasicMaterial({ color: 0xffc933, fog: false })
+  );
+  ringMesh.position.copy(ringPos);
+  scene.add(ringMesh);
+  ringGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex, color: 0xffd970, transparent: true, opacity: 0.55,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+  }));
+  ringGlow.scale.set(30, 30, 1);
+  ringGlow.position.copy(ringPos);
+  scene.add(ringGlow);
+  ringBeam = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.6, 3.4, 80, 12, 1, true),
+    new THREE.MeshBasicMaterial({
+      color: 0xffd970, transparent: true, opacity: 0.14,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false, fog: false
+    })
+  );
+  ringBeam.position.set(rx, 12.5 + 40, rz);
+  scene.add(ringBeam);
+})();
+
+// --- Sonidos WebAudio mínimos ---
+var audioCtx = null;
+function ensureAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { audioCtx = null; }
+}
+function tone(f0, f1, dur, type, vol, when) {
+  if (!audioCtx) return;
+  try {
+    var t0 = audioCtx.currentTime + (when || 0);
+    var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t0);
+    o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), t0 + dur);
+    g.gain.setValueAtTime(vol || 0.15, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) { /* sin sonido, sin error */ }
+}
+function playDing() { tone(880, 1320, 0.12, 'sine', 0.18, 0); }
+function playWin() { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, f, 0.22, 'sine', 0.16, i * 0.11); }); }
+function playCrash() {
+  if (!audioCtx) return;
+  tone(95, 38, 0.4, 'sawtooth', 0.28, 0);
+  try {
+    var len = Math.floor(audioCtx.sampleRate * 0.3);
+    var buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    var src = audioCtx.createBufferSource(); src.buffer = buf;
+    var g = audioCtx.createGain(); g.gain.value = 0.22;
+    src.connect(g); g.connect(audioCtx.destination);
+    src.start();
+  } catch (e) { /* sin sonido, sin error */ }
+}
+
+// --- Estados de partida, paneles y HUD de juego ---
+var ghBills = document.getElementById('gh-bills');
+var ghTime = document.getElementById('gh-time');
+var ghTarget = document.getElementById('gh-target');
+var arrowEl = document.getElementById('target-arrow');
+var resultPanel = document.getElementById('result-panel');
+var resultTitle = document.getElementById('result-title');
+var resultStats = document.getElementById('result-stats');
+var retryBtn = document.getElementById('btn-retry');
+var crashFlash = document.getElementById('crash-flash');
+
+function fmtTime(s) {
+  s = Math.max(0, Math.floor(s));
+  var m = Math.floor(s / 60), ss = s % 60;
+  return (m < 10 ? '0' : '') + m + ':' + (ss < 10 ? '0' : '') + ss;
+}
+function currentScore() { return billCount * 150 + Math.max(0, 3000 - Math.floor(gameTime) * 10); }
+function currentTarget() {
+  for (var i = 0; i < bills.length; i++) if (!bills[i].collected) return { pos: bills[i].pos, ring: false };
+  return { pos: ringPos, ring: true };
+}
+function updateGameHud() {
+  var tg = currentTarget();
+  var dist = Math.round(plane.pos.distanceTo(tg.pos));
+  ghBills.textContent = '💵 ' + billCount + '/' + TOTAL_BILLS;
+  ghTime.textContent = '⏱ ' + fmtTime(gameTime);
+  ghTarget.textContent = tg.ring ? ('🏁 Meta a ' + dist + ' m') : ('Objetivo a ' + dist + ' m');
+  var targetYaw = Math.atan2(-(tg.pos.x - plane.pos.x), -(tg.pos.z - plane.pos.z));
+  var rel = angleWrap(targetYaw - plane.yaw);
+  arrowEl.style.transform = 'rotate(' + (-90 - rel * 180 / Math.PI) + 'deg)';
+}
+function doCrash() {
+  if (gameState !== 'playing') return;
+  gameState = 'crashed'; flying = false;
+  playCrash();
+  crashFlash.style.opacity = '0.85';
+  setTimeout(function () { crashFlash.style.opacity = '0'; }, 130);
+  document.getElementById('turn-warning').style.display = 'none';
+  resultTitle.textContent = '💥 Te has estrellado';
+  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b>';
+  retryBtn.textContent = 'Reintentar';
+  resultPanel.style.display = 'flex';
+}
+function doWin() {
+  if (gameState !== 'playing') return;
+  gameState = 'won'; flying = false;
+  playWin();
+  document.getElementById('turn-warning').style.display = 'none';
+  resultTitle.textContent = '🏁 ¡Misión completada!';
+  resultStats.innerHTML = '⏱ Tiempo: <b>' + fmtTime(gameTime) + '</b> &nbsp;·&nbsp; 💵 Billetes: <b>' + billCount + '/' + TOTAL_BILLS + '</b><br>🏆 Puntuación: <b>' + currentScore() + '</b>';
+  retryBtn.textContent = 'Volver a jugar';
+  resultPanel.style.display = 'flex';
+}
+function beginRun() {
+  plane.pos.set(riverX(startZ), 14, startZ);
+  plane.yaw = Math.atan((riverX(startZ + 1) - riverX(startZ - 1)) / 2);
+  plane.speed = 17; plane.curSpeed = 17; plane.bank = 0; plane.pitchVis = 0;
+  for (var i = 0; i < bills.length; i++) { bills[i].collected = false; bills[i].group.visible = true; }
+  billCount = 0; gameTime = 0; gameState = 'playing'; flying = true;
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('hud').style.display = 'block';
+  document.getElementById('turn-warning').style.display = 'none';
+  resultPanel.style.display = 'none';
+  crashFlash.style.opacity = '0';
+  ensureAudio();
+  updateGameHud();
+}
+retryBtn.addEventListener('click', function () { startFlight(); });
+window.addEventListener('keydown', function (e) {
+  if (e.code === 'KeyR' && (gameState === 'crashed' || gameState === 'won')) startFlight();
+});
+
+// Lógica por frame durante la partida (la llama updateFlight)
+var ghClock = 0;
+function updateGameLogic(dt) {
+  gameTime += dt;
+  for (var i = 0; i < bills.length; i++) {
+    var b = bills[i];
+    if (!b.collected && plane.pos.distanceTo(b.pos) < 6) {
+      b.collected = true; b.group.visible = false; billCount++;
+      playDing();
+      updateGameHud();
+    }
+  }
+  for (var j = 0; j < obstacles.length; j++) {
+    var o = obstacles[j];
+    if (plane.pos.distanceToSquared(o.center) < o.radius * o.radius) { doCrash(); return; }
+  }
+  if (plane.pos.distanceTo(ringPos) < 10) { doWin(); return; }
+  ghClock += dt;
+  if (ghClock > 0.1) { ghClock = 0; updateGameHud(); }
+}
+// Animación ambiental de billetes y meta (siempre activa)
+function updateGameVisual(t) {
+  for (var i = 0; i < bills.length; i++) {
+    var b = bills[i];
+    if (b.collected) continue;
+    b.group.rotation.y = t * 1.4 + b.phase;
+    b.group.position.y = b.baseY + Math.sin(t * 1.6 + b.phase) * 0.5;
+    b.pos.y = b.group.position.y;
+  }
+  if (ringMesh) {
+    var s = 1 + Math.sin(t * 2.4) * 0.045;
+    ringMesh.scale.set(s, s, s);
+    ringGlow.material.opacity = 0.45 + Math.sin(t * 2.4) * 0.15;
+    ringBeam.material.opacity = 0.11 + Math.sin(t * 2.4) * 0.045;
+  }
+}
+
+// API de pruebas
+window.__scenarioGame = {
+  totalBills: TOTAL_BILLS,
+  getState: function () {
+    return { state: gameState, bills: billCount, totalBills: TOTAL_BILLS, time: gameTime, score: currentScore() };
+  },
+  getBills: function () {
+    return bills.map(function (b) { return { x: b.pos.x, y: b.pos.y, z: b.pos.z, collected: b.collected }; });
+  },
+  forceWin: function () { if (gameState === 'idle') beginRun(); doWin(); },
+  forceCrash: function () { if (gameState === 'idle') beginRun(); doCrash(); }
+};
+
 // ---------- Vuelo y controles ----------
 var flying = false;
 var startZ = 245;
@@ -776,10 +1171,8 @@ window.addEventListener('keydown', function (e) {
 window.addEventListener('keyup', function (e) { keys[e.code] = false; });
 
 function startFlight() {
-  if (flying) return;
-  flying = true;
-  document.getElementById('start-screen').style.display = 'none';
-  document.getElementById('hud').style.display = 'block';
+  if (gameState === 'playing') return;
+  beginRun();
 }
 document.getElementById('btn-fly').addEventListener('click', startFlight);
 
@@ -810,6 +1203,7 @@ function readGamepad() {
         turn: ax, climb: -ay,
         turbo: !!(g.buttons[7] && g.buttons[7].value > 0.25),
         brake: !!(g.buttons[6] && g.buttons[6].value > 0.25),
+        start: !!(g.buttons[0] && g.buttons[0].pressed),
         anyButton: g.buttons.some(function (b) { return b.pressed; })
       };
     }
@@ -825,8 +1219,12 @@ var hudClock = 0;
 
 function updateFlight(dt, t) {
   var gp = readGamepad();
+  var btn0Now = !!(gp && gp.start);
+  var btn0Edge = btn0Now && !prevBtn0;
+  prevBtn0 = btn0Now;
   if (!flying) {
-    if (gp && gp.anyButton) startFlight();
+    if (gameState === 'idle' && gp && gp.anyButton) startFlight();
+    else if ((gameState === 'crashed' || gameState === 'won') && btn0Edge) startFlight();
     // Cámara en espera: balanceo suave sobre el río
     camera.position.set(plane.pos.x, plane.pos.y + Math.sin(t * 0.6) * 0.35, plane.pos.z);
     camera.rotation.order = 'YXZ';
@@ -882,6 +1280,8 @@ function updateFlight(dt, t) {
     hudSpeed.textContent = Math.round(plane.curSpeed * 3.6);
     hudAlt.textContent = Math.round(plane.pos.y);
   }
+
+  if (gameState === 'playing') updateGameLogic(dt);
 }
 
 // ---------- Animación de la fauna y el entorno ----------
@@ -988,6 +1388,7 @@ function animate() {
   var dt = Math.min(clock.getDelta(), 0.05);
   var t = clock.elapsedTime;
   updateNature(dt, t);
+  updateGameVisual(t);
   updateFlight(dt, t);
   renderer.render(scene, camera);
 }
