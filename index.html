@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="Juega Abelardo Q: Horizonte Silencioso. Una experiencia de Totem Studio: vuela bajo, esquiva las rocas y completa la misión.">
+    <meta name="theme-color" content="#111111">
+    <title>Abelardo Q · Totem Studio</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="presentation/presentation.css?v=20261030b">
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="https://totemstudio.es/" aria-label="Totem Studio, página principal"><img class="brand" src="presentation/totem-logo.png" alt="Totem Studio" width="118" height="48"></a>
+    </header>
+    <main>
+    <section class="intro" aria-labelledby="game-title">
+      <p class="eyebrow">Una experiencia de Totem Studio</p>
+      <h1 id="game-title">Abelardo Q</h1>
+      <p class="subtitle">Vuela bajo. Esquiva las rocas. Completa la misión.</p>
+    </section>
+    <div id="unity-container" class="unity-desktop">
+      <div id="game-stage">
+      <canvas id="unity-canvas" width=1280 height=720 tabindex="-1" aria-label="Abelardo Q: Horizonte Silencioso"></canvas>
+      <div id="unity-loading-bar">
+        <p class="loading-title">Preparando la misión</p>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+        <p id="loading-status" role="status" aria-live="polite">Cargando el juego…</p>
+      </div>
+      <div id="unity-warning"> </div>
+      </div>
+      <div id="unity-footer">
+        <button id="unity-fullscreen-button" type="button" disabled><span aria-hidden="true">⛶</span> Pantalla completa</button>
+      </div>
+    </div>
+    </main>
+    <style>
+      .extra-scenarios { max-width: 1280px; margin: 28px auto 40px; padding: 0 16px; font-family: 'Inter', system-ui, sans-serif; color: #eee; }
+      .extra-scenarios h2 { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+      .extra-scenarios .note { font-size: 13px; color: #aaa; margin: 0 0 16px; }
+      .extra-scenarios .cards { display: flex; flex-wrap: wrap; gap: 14px; }
+      .extra-scenarios a.card { flex: 1 1 300px; display: block; text-decoration: none; color: #fff; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 18px 20px; transition: background .2s, transform .2s; }
+      .extra-scenarios a.card:hover { background: rgba(255,255,255,.11); transform: translateY(-2px); }
+      .extra-scenarios .card .emoji { font-size: 30px; }
+      .extra-scenarios .card h3 { margin: 8px 0 4px; font-size: 18px; font-weight: 700; }
+      .extra-scenarios .card p { margin: 0; font-size: 13.5px; line-height: 1.45; color: #ccc; }
+      .extra-scenarios .card .go { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; color: #8fd0ff; }
+    </style>
+    <section class="extra-scenarios" aria-label="Escenarios adicionales">
+      <h2>Escenarios adicionales</h2>
+      <p class="note">Dos escenarios extra en versión web, creados para esta edición. Se vuela con el teclado o con un mando (PlayStation, Xbox…) conectado al ordenador.</p>
+      <div class="cards">
+        <a class="card" href="escenarios/amazonas.html">
+          <span class="emoji" aria-hidden="true">🌴</span>
+          <h3>Selva Amazónica</h3>
+          <p>Sobrevuela el río entre miles de árboles y palmeras, con guacamayos, tucanes, monos, mariposas y caimanes.</p>
+          <span class="go">Volar en la selva →</span>
+        </a>
+        <a class="card" href="escenarios/los-angeles.html">
+          <span class="emoji" aria-hidden="true">🌆</span>
+          <h3>Los Ángeles</h3>
+          <p>Rascacielos al atardecer, balcones con gente, tráfico con coches, taxis y autobuses, y el cartel de Hollywood al fondo.</p>
+          <span class="go">Volar en la ciudad →</span>
+        </a>
+      </div>
+    </section>
+    <noscript>Activa JavaScript para jugar Abelardo Q.</noscript>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      // Keep the existing Unity audio gesture gate inside the game frame.
+      // Its actual click listener still resumes Unity's AudioContext.
+      new MutationObserver(function () {
+        var gate = document.querySelector('body > [role="dialog"][aria-label="Entrar al juego"]');
+        if (gate) document.querySelector('#game-stage').appendChild(gate);
+      }).observe(document.body, {childList:true});
+
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/Publish_abelardoq_v4.loader.js";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/Publish_abelardoq_v4.data.unityweb",
+        frameworkUrl: buildUrl + "/Publish_abelardoq_v4.framework.js.unityweb",
+        codeUrl: buildUrl + "/Publish_abelardoq_v4.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Producción independiente",
+        productName: "Abelardo Q: Horizonte Silencioso",
+        productVersion: "1.3.3",
+        showBanner: unityShowBanner,
+        // errorHandler: function(err, url, line) {
+        //    alert("error " + err + " occurred at line " + line);
+        //    // Return 'true' if you handled this error and don't want Unity
+        //    // to process it further, 'false' otherwise.
+        //    return true;
+        // },
+      };
+
+      // By default, Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
+
+      // If you would like all file writes inside Unity Application.persistentDataPath
+      // directory to automatically persist so that the contents are remembered when
+      // the user revisits the site the next time, uncomment the following line:
+      config.autoSyncPersistentDataPath = true;
+      // This autosyncing is currently not the default behavior to avoid regressing
+      // existing user projects that might rely on the earlier manual
+      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
+      // expected to change.
+
+      var isAbelardoQMobileBrowser =
+        (navigator.userAgentData && navigator.userAgentData.mobile === true) ||
+        /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      if (isAbelardoQMobileBrowser) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+
+        var meta = document.querySelector('meta[name="viewport"]');
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes, viewport-fit=cover';
+        document.querySelector("#unity-container").className = "unity-mobile";
+        canvas.className = "unity-mobile";
+        document.body.classList.add("unity-mobile");
+
+        // To lower canvas resolution on mobile devices to gain some
+        // performance, uncomment the following line:
+        config.devicePixelRatio = 1;
+
+
+      } else {
+        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+        canvas.style.width = "1280px";
+        canvas.style.height = "720px";
+      }
+
+      document.querySelector("#unity-loading-bar").style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+          document.querySelector("#loading-status").textContent = "Cargando el juego · " + Math.round(progress * 100) + "%";
+              }).then((unityInstance) => {
+                document.querySelector("#unity-loading-bar").style.display = "none";
+                document.querySelector("#unity-fullscreen-button").disabled = false;
+                document.querySelector("#unity-fullscreen-button").onclick = () => {
+                  unityInstance.SetFullscreen(1);
+                };
+
+              }).catch((message) => {
+                document.querySelector("#unity-loading-bar").style.display = "none";
+                unityShowBanner("No se pudo cargar el juego. Actualiza la página para reintentar.", "error");
+                console.error(message);
+              });
+            };
+
+      document.body.appendChild(script);
+      script.onerror = function () { unityShowBanner("No se pudo descargar el juego. Revisa tu conexión y actualiza la página.", "error"); };
+
+    </script>
+    <script src="presentation/gamepad.js"></script>
+  </body>
+</html>
